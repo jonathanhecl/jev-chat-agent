@@ -22,15 +22,32 @@ function pushRecent(username, message) {
   }
 }
 
+// ANSI color codes
+const GREEN = '\x1b[32m';
+const RED = '\x1b[31m';
+const RESET = '\x1b[0m';
+const DIM = '\x1b[2m';
+
 function logResult(username, message, result, elapsedMs) {
   const { decisions } = result;
-  const flagged = Object.entries(decisions)
-    .filter(([, d]) => d.flagged)
-    .map(([cat, d]) => `${cat}(${(d.probability * 100).toFixed(1)}%)`);
 
-  const status = flagged.length > 0 ? `FLAGGED: ${flagged.join(', ')}` : 'clean';
-  const timing = elapsedMs !== undefined ? ` [${elapsedMs}ms]` : '';
-  console.log(`[${username}] ${message} → ${status}${timing}`);
+  // Build percentage string for each category
+  const parts = Object.entries(decisions).map(([cat, d]) => {
+    const pct = (d.probability * 100).toFixed(1);
+    return `${cat} ${pct}%`;
+  });
+
+  const flagged = Object.entries(decisions).filter(([, d]) => d.flagged);
+  const isClean = flagged.length === 0;
+
+  const timing = elapsedMs !== undefined ? ` ${DIM}[${elapsedMs}ms]${RESET}` : '';
+
+  if (isClean) {
+    console.log(`[${username}] ${message} → ${GREEN}[${parts.join(', ')}]${RESET}${timing}`);
+  } else {
+    const flaggedStr = flagged.map(([cat, d]) => `${cat}(${(d.probability * 100).toFixed(1)}%)`).join(', ');
+    console.log(`[${username}] ${message} → ${RED}[${parts.join(', ')}]${RESET} ${RED}⚠ ${flaggedStr}${RESET}${timing}`);
+  }
 }
 
 async function moderate(client, channel, tags, message, result) {
