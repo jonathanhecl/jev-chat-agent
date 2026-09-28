@@ -5,13 +5,16 @@ const QUESTIONS = {
     instructions: '¿Es este mensaje un insulto o lenguaje ofensivo dirigido a otro usuario?',
   },
   spam: {
-    instructions: '¿Es este mensaje spam de chat? Spam es: el mismo texto repetido muchas veces, promoción de canales/productos/servicios, o enlaces publicitarios. NO es spam: risas (ajajaja), teclazos aleatorios sin sentido (jkasghfjkñahgjklñsg), mensajes cortos normales, o conversación casual.',
+    instructions: '¿Es este mensaje spam de chat? Spam es: promoción de canales/productos/servicios',
   },
   toxicidad: {
     instructions: '¿Es este mensaje tóxico (lenguaje dañino, acoso, o contenido perturbador)?',
   },
   links: {
-    instructions: '¿Contiene este mensaje enlaces o URLs no permitidos?',
+    instructions: '¿Contiene este mensaje enlaces o URLs?',
+  },
+  atencion: {
+    instructions: '¿Es este mensaje una pregunta o consulta dirigida al streamer que requiere su atención? (ej. "¿qué juego es este?", "¿cuándo es el próximo stream?", "saludos desde México")',
   },
 };
 
@@ -30,7 +33,7 @@ export function buildState(message, context = {}, recentMessages = []) {
   }
 
   lines.push('Mensaje actual:');
-  if (context.channel) lines.push(`#${context.channel}`);
+  if (context.channel) lines.push(`Canal: #${context.channel}`);
   if (context.username) lines.push(`[${context.username}]: ${message}`);
 
   return lines.join('\n');

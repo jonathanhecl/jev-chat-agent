@@ -46,5 +46,6 @@ export const config = {
     spam: getThreshold('JEV_THRESHOLD_SPAM'),
     toxicidad: getThreshold('JEV_THRESHOLD_TOXICIDAD'),
     links: getThreshold('JEV_THRESHOLD_LINKS'),
+    atencion: getThreshold('JEV_THRESHOLD_ATENCION'),
   },
 };

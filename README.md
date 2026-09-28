@@ -46,6 +46,7 @@ Ejemplo: `TWITCH_TOKEN=oauth:abc123def456...`
 - **spam** — contenido repetitivo o promoción no solicitada
 - **toxicidad** — lenguaje dañino o acoso
 - **links** — enlaces o URLs no permitidos
+- **atencion** — preguntas/consultas dirigidas al streamer
 
 ## Notas
 
