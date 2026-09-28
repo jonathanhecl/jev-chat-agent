@@ -32,18 +32,19 @@ const DIM = '\x1b[2m';
 function logResult(username, message, result, elapsedMs) {
   const { decisions } = result;
 
+  const flagged = Object.entries(decisions).filter(([, d]) => d.flagged);
+  const isClean = flagged.length === 0;
+  const color = isClean ? GREEN : RED;
+
   // Build percentage string for each category, bold if flagged
+  // Re-apply the bracket color after bold reset to keep the bracket colored
   const parts = Object.entries(decisions).map(([cat, d]) => {
     const pct = (d.probability * 100).toFixed(1);
     const label = `${cat} ${pct}%`;
-    return d.flagged ? `${BOLD}${label}${RESET}` : label;
+    return d.flagged ? `${BOLD}${label}${color}` : label;
   });
 
-  const flagged = Object.entries(decisions).filter(([, d]) => d.flagged);
-  const isClean = flagged.length === 0;
-
   const timing = elapsedMs !== undefined ? ` ${DIM}[${elapsedMs}ms]${RESET}` : '';
-  const color = isClean ? GREEN : RED;
 
   console.log(`[${username}] ${message} → ${color}[${parts.join(', ')}]${RESET}${timing}`);
 }
