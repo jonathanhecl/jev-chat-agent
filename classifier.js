@@ -5,7 +5,7 @@ const QUESTIONS = {
     instructions: '¿Es este mensaje un insulto o lenguaje ofensivo dirigido a otro usuario?',
   },
   spam: {
-    instructions: '¿Es este mensaje spam (publicación repetitiva, promoción no solicitada, o contenido sin sentido)?',
+    instructions: '¿Es este mensaje spam de chat: mismo texto repetido muchas veces, promoción de canales/productos/servicios, o enlaces publicitarios? Ignora risas (ajajaja), teclazos aleatorios y mensajes cortos normales.',
   },
   toxicidad: {
     instructions: '¿Es este mensaje tóxico (lenguaje dañino, acoso, o contenido perturbador)?',
