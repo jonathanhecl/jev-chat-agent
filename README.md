@@ -20,9 +20,11 @@ npm start
 
 ### Obtener el token de Twitch
 
-1. Ve a [twitchapps.com/tmi](https://twitchapps.com/tmi)
-2. Conecta tu cuenta de Twitch
-3. Copia el token `oauth:...` y pégalo en `TWITCH_TOKEN`
+1. Ve a [twitchtokengenerator.com](https://twitchtokengenerator.com/)
+2. Genera un token (necesitas permisos de lectura de chat)
+3. Copia el **access token** y pégalo en `TWITCH_TOKEN` con el prefijo `oauth:`
+
+Ejemplo: `TWITCH_TOKEN=oauth:abc123def456...`
 
 > El bot solo lee y loguea, no necesita permisos de moderador.
 
