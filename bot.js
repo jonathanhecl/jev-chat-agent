@@ -25,15 +25,22 @@ function pushRecent(username, message) {
 // ANSI color codes
 const GREEN = '\x1b[32m';
 const RED = '\x1b[31m';
+const YELLOW = '\x1b[33m';
 const BOLD = '\x1b[1m';
 const RESET = '\x1b[0m';
 const DIM = '\x1b[2m';
 
+// Categories that are informational only (no moderation action, no chat message)
+const INFO_CATEGORIES = new Set(['atencion']);
+
 function logResult(username, message, result, elapsedMs) {
   const { decisions } = result;
 
-  const flagged = Object.entries(decisions).filter(([, d]) => d.flagged);
-  const isClean = flagged.length === 0;
+  // Split into actionable flags and informational flags
+  const actionable = Object.entries(decisions).filter(([, d]) => d.flagged && !INFO_CATEGORIES.has([0]));
+  const informational = Object.entries(decisions).filter(([, d]) => d.flagged && INFO_CATEGORIES.has([0]));
+
+  const isClean = actionable.length === 0;
   const color = isClean ? GREEN : RED;
 
   // Build percentage string for each category, bold if flagged
@@ -41,17 +48,24 @@ function logResult(username, message, result, elapsedMs) {
   const parts = Object.entries(decisions).map(([cat, d]) => {
     const pct = (d.probability * 100).toFixed(1);
     const label = `${cat} ${pct}%`;
-    return d.flagged ? `${BOLD}${label}${color}` : label;
+    if (!d.flagged) return label;
+    const catColor = INFO_CATEGORIES.has(cat) ? YELLOW : color;
+    return `${BOLD}${label}${catColor}`;
   });
 
   const timing = elapsedMs !== undefined ? ` ${DIM}[${elapsedMs}ms]${RESET}` : '';
 
-  console.log(`[${username}] ${message} → ${color}[${parts.join(', ')}]${RESET}${timing}`);
+  // Build info suffix for informational categories
+  const infoStr = informational.length > 0
+    ? ` ${YELLOW}ℹ ${informational.map(([cat, d]) => `${cat} ${(d.probability * 100).toFixed(0)}%`).join(', ')}${RESET}`
+    : '';
+
+  console.log(`[${username}] ${message} → ${color}[${parts.join(', ')}]${RESET}${infoStr}${timing}`);
 }
 
 async function sendChatMessage(client, channel, tags, result) {
   const { decisions } = result;
-  const flagged = Object.entries(decisions).filter(([, d]) => d.flagged);
+  const flagged = Object.entries(decisions).filter(([, d]) => d.flagged && !INFO_CATEGORIES.has([0]));
 
   if (flagged.length === 0) return;
 
@@ -68,7 +82,7 @@ async function sendChatMessage(client, channel, tags, result) {
 
 async function moderate(client, channel, tags, message, result) {
   const { decisions } = result;
-  const flagged = Object.entries(decisions).filter(([, d]) => d.flagged);
+  const flagged = Object.entries(decisions).filter(([, d]) => d.flagged && !INFO_CATEGORIES.has([0]));
 
   if (flagged.length === 0) return;
 
