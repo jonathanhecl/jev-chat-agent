@@ -1,11 +1,19 @@
 import { decideMany } from './jevClient.js';
 
-const QUESTIONS = [
-  { id: 'insulto', question: '¿Es este mensaje un insulto o lenguaje ofensivo dirigido a otro usuario?' },
-  { id: 'spam', question: '¿Es este mensaje spam (publicación repetitiva, promoción no solicitada, o contenido sin sentido)?' },
-  { id: 'toxicidad', question: '¿Es este mensaje tóxico (lenguaje dañino, acoso, o contenido perturbador)?' },
-  { id: 'links', question: '¿Contiene este mensaje enlaces o URLs no permitidos?' },
-];
+const QUESTIONS = {
+  insulto: {
+    instructions: '¿Es este mensaje un insulto o lenguaje ofensivo dirigido a otro usuario?',
+  },
+  spam: {
+    instructions: '¿Es este mensaje spam (publicación repetitiva, promoción no solicitada, o contenido sin sentido)?',
+  },
+  toxicidad: {
+    instructions: '¿Es este mensaje tóxico (lenguaje dañino, acoso, o contenido perturbador)?',
+  },
+  links: {
+    instructions: '¿Contiene este mensaje enlaces o URLs no permitidos?',
+  },
+};
 
 /**
  * Build the state text from a chat message and optional context.
@@ -27,11 +35,11 @@ export async function classifyMessage(endpoint, message, context, thresholds) {
   const probabilities = await decideMany(endpoint, state, QUESTIONS);
 
   const decisions = {};
-  for (const q of QUESTIONS) {
-    const prob = probabilities[q.id] ?? 0;
-    decisions[q.id] = {
+  for (const [id, q] of Object.entries(QUESTIONS)) {
+    const prob = probabilities[id] ?? 0;
+    decisions[id] = {
       probability: prob,
-      flagged: prob >= (thresholds[q.id] ?? 0.7),
+      flagged: prob >= (thresholds[id] ?? 0.7),
     };
   }
 

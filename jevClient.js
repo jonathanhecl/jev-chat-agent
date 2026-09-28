@@ -1,6 +1,10 @@
 /**
  * Lightweight HTTP client for the Jev-Style decision endpoint.
  * Uses native fetch — no heavy dependencies.
+ *
+ * API format (POST /v1/systemone):
+ *   Request:  { "state": string, "questions": { id: { "type": "noul", "instructions": "..." } } }
+ *   Response: { "answers": { id: { "type": "noul", "noul": 0.45 } } }
  */
 
 const MAX_RETRIES = 3;
@@ -12,21 +16,19 @@ async function sleep(ms) {
 
 /**
  * Call the Jev endpoint with a state and multiple noul (yes/no) questions.
- * Uses decide_many semantics: one call, state computed once.
  *
  * @param {string} endpoint - Full URL of the /v1/systemone endpoint
  * @param {string} state - The context/state text
- * @param {Array<{id: string, question: string}>} questions - noul questions
- * @returns {Object} Map of questionId -> boolean probability
+ * @param {Object} questions - Map of questionId -> { instructions: string }
+ * @returns {Object} Map of questionId -> probability (0.0 - 1.0)
  */
 export async function decideMany(endpoint, state, questions) {
   const payload = {
     state,
-    questions: questions.map((q) => ({
-      t: 'noul',
-      ins: q.question,
-      crit: null,
-    })),
+    questions: Object.entries(questions).reduce((acc, [id, q]) => {
+      acc[id] = { type: 'noul', instructions: q.instructions };
+      return acc;
+    }, {}),
   };
 
   let lastError;
@@ -40,11 +42,12 @@ export async function decideMany(endpoint, state, questions) {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const body = await response.text().catch(() => '');
+        throw new Error(`HTTP ${response.status}: ${response.statusText} — ${body}`);
       }
 
       const data = await response.json();
-      return parseResponse(data, questions);
+      return parseResponse(data, Object.keys(questions));
     } catch (err) {
       lastError = err;
       if (attempt < MAX_RETRIES) {
@@ -59,38 +62,28 @@ export async function decideMany(endpoint, state, questions) {
 
 /**
  * Parse the Jev response and map question IDs to probabilities.
- * Handles both array and object response formats.
+ * Expected format: { answers: { [id]: { type: "noul", noul: 0.45 } } }
  */
-function parseResponse(data, questions) {
+function parseResponse(data, questionIds) {
   const results = {};
 
-  // Format 1: { answers: { [questionIndex]: { noul: { true: 0.9, false: 0.1 } } } }
-  if (data.answers) {
-    const answers = Array.isArray(data.answers) ? data.answers : Object.values(data.answers);
-    questions.forEach((q, i) => {
-      const answer = answers[i];
-      if (answer && answer.noul) {
-        results[q.id] = answer.noul.true ?? answer.noul.probability ?? 0;
+  if (data.answers && typeof data.answers === 'object') {
+    for (const id of questionIds) {
+      const answer = data.answers[id];
+      if (answer && typeof answer.noul === 'number') {
+        results[id] = answer.noul;
       } else {
-        results[q.id] = 0;
+        results[id] = 0;
       }
-    });
+    }
     return results;
   }
 
-  // Format 2: { results: [{ id, probability }] }
-  if (Array.isArray(data.results)) {
-    data.results.forEach((r) => {
-      results[r.id] = r.probability ?? 0;
-    });
-    return results;
-  }
-
-  // Format 3: direct map { [questionId]: probability }
+  // Fallback: direct map { [id]: probability }
   if (typeof data === 'object') {
-    questions.forEach((q) => {
-      results[q.id] = typeof data[q.id] === 'number' ? data[q.id] : 0;
-    });
+    for (const id of questionIds) {
+      results[id] = typeof data[id] === 'number' ? data[id] : 0;
+    }
     return results;
   }
 

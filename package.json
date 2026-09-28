@@ -2,6 +2,7 @@
   "name": "jev-chat-agent",
   "version": "1.0.0",
   "description": "Twitch chat moderator bot using Jev-Style-2B for real-time message classification",
+  "type": "module",
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js"
