@@ -12,9 +12,10 @@ function getEnv(name, defaultValue) {
 function getThreshold(name) {
   const raw = getEnv(name, '0.7');
   const value = parseFloat(raw);
-  if (isNaN(value) || value < 0 || value > 1) {
+  if (isNaN(value) || value < 0) {
     throw new Error(`Invalid threshold for ${name}: ${raw}`);
   }
+  // Values > 1 mean the category is disabled (never flagged)
   return value;
 }
 
