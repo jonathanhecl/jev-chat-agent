@@ -33,6 +33,10 @@ export const config = {
   context: {
     messageCount: parseInt(getEnv('JEV_CONTEXT_MESSAGES', '3'), 10) || 3,
   },
+  excludedUsers: getEnv('JEV_EXCLUDED_USERS', '')
+    .split(',')
+    .map((u) => u.trim().toLowerCase())
+    .filter(Boolean),
   thresholds: {
     insulto: getThreshold('JEV_THRESHOLD_INSULTO'),
     spam: getThreshold('JEV_THRESHOLD_SPAM'),

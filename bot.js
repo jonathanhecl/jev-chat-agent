@@ -62,6 +62,12 @@ async function handleMessage(channel, tags, message, self, client) {
   if (self) return;
 
   const username = tags.username || 'unknown';
+
+  // Skip excluded users
+  if (config.excludedUsers.includes(username.toLowerCase())) {
+    return;
+  }
+
   const context = { channel: channel.slice(1), username };
 
   // Skip very long messages (likely pasted content)
