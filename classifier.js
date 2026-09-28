@@ -14,7 +14,7 @@ const QUESTIONS = {
     instructions: '¿Contiene este mensaje enlaces o URLs?',
   },
   atencion: {
-    instructions: '¿Es este mensaje una pregunta o consulta dirigida al streamer que requiere su atención? (ej. "¿qué juego es este?", "¿cuándo es el próximo stream?", "saludos desde México")',
+    instructions: '¿Es este mensaje una pregunta o consulta dirigida al streamer que requiere su atención? Incluye: menciones directas al streamer (@nombre), preguntas sobre el stream/juego, o saludos al canal. Ejemplos: "@streamer ¿qué juego es este?", "¿cuándo es el próximo stream?", "saludos desde México".',
   },
 };
 
