@@ -96,6 +96,11 @@ async function handleMessage(channel, tags, message, self, client) {
 
   const username = tags.username || 'unknown';
 
+  // Skip the channel host itself
+  if (username.toLowerCase() === config.twitch.channel.toLowerCase()) {
+    return;
+  }
+
   // Skip excluded users
   if (config.excludedUsers.includes(username.toLowerCase())) {
     return;
