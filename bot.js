@@ -40,8 +40,8 @@ function logResult(username, message, result, elapsedMs) {
   const actionable = Object.entries(decisions).filter(([, d]) => d.flagged && !INFO_CATEGORIES.has([0]));
   const informational = Object.entries(decisions).filter(([, d]) => d.flagged && INFO_CATEGORIES.has([0]));
 
-  const isClean = actionable.length === 0;
-  const color = isClean ? GREEN : RED;
+  const isClean = actionable.length === 0 && informational.length === 0;
+  const color = actionable.length > 0 ? RED : informational.length > 0 ? YELLOW : GREEN;
 
   // Build percentage string for each category, bold if flagged
   // Re-apply the bracket color after bold reset to keep the bracket colored
@@ -162,7 +162,7 @@ const client = new tmi.Client({
 });
 
 client.on('connected', (addr, port) => {
-  console.log(`Connected to ${addr}:${port}`);
+  console.log(`Connected to Twitch`); // ${addr}:${port}
   console.log(`Monitoring #${config.twitch.channel} — Jev endpoint: ${config.jev.endpoint}`);
   console.log(`Moderation: ${config.moderation.enabled ? 'ENABLED' : 'DISABLED (log only)'}`);
   console.log(`Chat messages: ${config.chatMessages.enabled ? 'ENABLED' : 'DISABLED'}`);
