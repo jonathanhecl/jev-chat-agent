@@ -11,14 +11,15 @@ function enqueue(fn) {
   return result;
 }
 
-function logResult(username, message, result) {
+function logResult(username, message, result, elapsedMs) {
   const { decisions } = result;
   const flagged = Object.entries(decisions)
     .filter(([, d]) => d.flagged)
     .map(([cat, d]) => `${cat}(${(d.probability * 100).toFixed(1)}%)`);
 
   const status = flagged.length > 0 ? `FLAGGED: ${flagged.join(', ')}` : 'clean';
-  console.log(`[${username}] ${message} → ${status}`);
+  const timing = elapsedMs !== undefined ? ` [${elapsedMs}ms]` : '';
+  console.log(`[${username}] ${message} → ${status}${timing}`);
 }
 
 async function moderate(client, channel, tags, message, result) {
@@ -59,10 +60,12 @@ async function handleMessage(channel, tags, message, self, client) {
   }
 
   try {
+    const start = Date.now();
     const result = await enqueue(() =>
       classifyMessage(config.jev.endpoint, message, context, config.thresholds)
     );
-    logResult(username, message, result);
+    const elapsed = Date.now() - start;
+    logResult(username, message, result, elapsed);
 
     if (config.moderation.enabled) {
       await moderate(client, channel, tags, message, result);
