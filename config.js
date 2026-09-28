@@ -27,6 +27,9 @@ export const config = {
   jev: {
     endpoint: getEnv('JEV_ENDPOINT', 'http://mac-mini.local:8765/v1/systemone'),
   },
+  moderation: {
+    enabled: getEnv('MODERATION_ENABLED', 'false') === 'true',
+  },
   thresholds: {
     insulto: getThreshold('JEV_THRESHOLD_INSULTO'),
     spam: getThreshold('JEV_THRESHOLD_SPAM'),

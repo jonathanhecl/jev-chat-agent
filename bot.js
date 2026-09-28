@@ -4,7 +4,6 @@ import { classifyMessage } from './classifier.js';
 
 // Simple concurrency-1 queue to avoid overwhelming the Jev endpoint
 let queue = Promise.resolve();
-let skippedCount = 0;
 
 function enqueue(fn) {
   const result = queue.then(fn, fn);
@@ -22,7 +21,32 @@ function logResult(username, message, result) {
   console.log(`[${username}] ${message} → ${status}`);
 }
 
-async function handleMessage(channel, tags, message, self) {
+async function moderate(client, channel, tags, message, result) {
+  const { decisions } = result;
+  const flagged = Object.entries(decisions).filter(([, d]) => d.flagged);
+
+  if (flagged.length === 0) return;
+
+  const categories = flagged.map(([cat]) => cat).join(', ');
+
+  // Delete the message
+  try {
+    await client.deletemessage(channel, tags.id);
+    console.log(`  ↳ deleted message (${categories})`);
+  } catch (err) {
+    console.error(`  ↳ failed to delete: ${err.message}`);
+  }
+
+  // Timeout the user (300s)
+  try {
+    await client.timeout(channel, tags.username, 300, `Jev flagged: ${categories}`);
+    console.log(`  ↳ timed out ${tags.username} for 300s`);
+  } catch (err) {
+    console.error(`  ↳ failed to timeout: ${err.message}`);
+  }
+}
+
+async function handleMessage(channel, tags, message, self, client) {
   if (self) return;
 
   const username = tags.username || 'unknown';
@@ -39,9 +63,12 @@ async function handleMessage(channel, tags, message, self) {
       classifyMessage(config.jev.endpoint, message, context, config.thresholds)
     );
     logResult(username, message, result);
+
+    if (config.moderation.enabled) {
+      await moderate(client, channel, tags, message, result);
+    }
   } catch (err) {
     console.error(`[${username}] classification failed: ${err.message}`);
-    skippedCount++;
   }
 }
 
@@ -57,10 +84,13 @@ const client = new tmi.Client({
 client.on('connected', (addr, port) => {
   console.log(`Connected to ${addr}:${port}`);
   console.log(`Monitoring #${config.twitch.channel} — Jev endpoint: ${config.jev.endpoint}`);
+  console.log(`Moderation: ${config.moderation.enabled ? 'ENABLED' : 'DISABLED (log only)'}`);
   console.log(`Thresholds:`, config.thresholds);
 });
 
-client.on('message', handleMessage);
+client.on('message', (channel, tags, message, self) => {
+  handleMessage(channel, tags, message, self, client);
+});
 
 client.on('error', (err) => {
   console.error('Twitch client error:', err.message);
