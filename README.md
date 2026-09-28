@@ -18,6 +18,14 @@ npm start
 
 ## Configuración
 
+### Obtener el token de Twitch
+
+1. Ve a [twitchapps.com/tmi](https://twitchapps.com/tmi)
+2. Conecta tu cuenta de Twitch
+3. Copia el token `oauth:...` y pégalo en `TWITCH_TOKEN`
+
+> El bot solo lee y loguea, no necesita permisos de moderador.
+
 | Variable | Descripción |
 |---|---|
 | `TWITCH_CHANNEL` | Canal a monitorear |
