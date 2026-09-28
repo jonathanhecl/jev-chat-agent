@@ -41,7 +41,13 @@ function logResult(username, message, result, elapsedMs) {
   const informational = Object.entries(decisions).filter(([, d]) => d.flagged && INFO_CATEGORIES.has([0]));
 
   const isClean = actionable.length === 0 && informational.length === 0;
-  const color = actionable.length > 0 ? RED : informational.length > 0 ? YELLOW : GREEN;
+
+  // If atencion is the dominant category (highest probability), show yellow
+  const allEntries = Object.entries(decisions);
+  const dominant = allEntries.reduce((a, b) => (a[1].probability > b[1].probability ? a : b));
+  const atencionDominant = dominant[0] === 'atencion' && dominant[1].probability >= 0.5;
+
+  const color = atencionDominant ? YELLOW : actionable.length > 0 ? RED : informational.length > 0 ? YELLOW : GREEN;
 
   // Build percentage string for each category, bold if flagged
   // Re-apply the bracket color after bold reset to keep the bracket colored
