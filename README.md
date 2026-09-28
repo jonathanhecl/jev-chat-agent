@@ -35,6 +35,7 @@ Ejemplo: `TWITCH_TOKEN=oauth:abc123def456...`
 | `TWITCH_TOKEN` | OAuth token del bot |
 | `JEV_ENDPOINT` | URL del endpoint Jev |
 | `MODERATION_ENABLED` | `false` = solo log, `true` = borrar mensajes y timeout |
+| `CHAT_MESSAGES_ENABLED` | `false` = no enviar mensajes al chat, `true` = avisar en el chat cuando se detecta algo |
 | `JEV_CONTEXT_MESSAGES` | Número de mensajes recientes como contexto (default 3) |
 | `JEV_EXCLUDED_USERS` | Lista separada por comas de nicks excluidos (ej. `mod1,bot2`) |
 | `JEV_THRESHOLD_*` | Umbrales de clasificación (0.0–1.0) |

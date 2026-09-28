@@ -49,6 +49,23 @@ function logResult(username, message, result, elapsedMs) {
   console.log(`[${username}] ${message} → ${color}[${parts.join(', ')}]${RESET}${timing}`);
 }
 
+async function sendChatMessage(client, channel, tags, result) {
+  const { decisions } = result;
+  const flagged = Object.entries(decisions).filter(([, d]) => d.flagged);
+
+  if (flagged.length === 0) return;
+
+  const parts = flagged.map(([cat, d]) => `${cat} ${(d.probability * 100).toFixed(0)}%`);
+  const text = `@${tags.username} ⚠ ${parts.join(', ')}`;
+
+  try {
+    await client.say(channel, text);
+    console.log(`  ↳ chat: ${text}`);
+  } catch (err) {
+    console.error(`  ↳ failed to send chat message: ${err.message}`);
+  }
+}
+
 async function moderate(client, channel, tags, message, result) {
   const { decisions } = result;
   const flagged = Object.entries(decisions).filter(([, d]) => d.flagged);
@@ -100,6 +117,10 @@ async function handleMessage(channel, tags, message, self, client) {
     const elapsed = Date.now() - start;
     logResult(username, message, result, elapsed);
 
+    if (config.chatMessages.enabled) {
+      await sendChatMessage(client, channel, tags, result);
+    }
+
     if (config.moderation.enabled) {
       await moderate(client, channel, tags, message, result);
     }
@@ -123,6 +144,7 @@ client.on('connected', (addr, port) => {
   console.log(`Connected to ${addr}:${port}`);
   console.log(`Monitoring #${config.twitch.channel} — Jev endpoint: ${config.jev.endpoint}`);
   console.log(`Moderation: ${config.moderation.enabled ? 'ENABLED' : 'DISABLED (log only)'}`);
+  console.log(`Chat messages: ${config.chatMessages.enabled ? 'ENABLED' : 'DISABLED'}`);
   console.log(`Thresholds:`, config.thresholds);
 });
 
