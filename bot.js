@@ -112,11 +112,13 @@ async function handleMessage(channel, tags, message, self, client) {
 
   // Skip the channel host itself
   if (username.toLowerCase() === config.twitch.channel.toLowerCase()) {
+    console.log(`[${username}] ${message} ${DIM}(host)${RESET}`);
     return;
   }
 
   // Skip excluded users
   if (config.excludedUsers.includes(username.toLowerCase())) {
+    console.log(`[${username}] ${message} ${DIM}(excluded)${RESET}`);
     return;
   }
 
