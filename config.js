@@ -30,6 +30,9 @@ export const config = {
   moderation: {
     enabled: getEnv('MODERATION_ENABLED', 'false') === 'true',
   },
+  context: {
+    messageCount: parseInt(getEnv('JEV_CONTEXT_MESSAGES', '3'), 10) || 3,
+  },
   thresholds: {
     insulto: getThreshold('JEV_THRESHOLD_INSULTO'),
     spam: getThreshold('JEV_THRESHOLD_SPAM'),

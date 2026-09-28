@@ -16,22 +16,32 @@ const QUESTIONS = {
 };
 
 /**
- * Build the state text from a chat message and optional context.
+ * Build the state text from a chat message and recent context.
  */
-export function buildState(message, context = {}) {
-  const parts = [];
-  if (context.channel) parts.push(`#${context.channel}`);
-  if (context.username) parts.push(`@${context.username}`);
-  parts.push(message);
-  return parts.join(' ');
+export function buildState(message, context = {}, recentMessages = []) {
+  const lines = [];
+
+  if (recentMessages.length > 0) {
+    lines.push('Mensajes recientes:');
+    for (const msg of recentMessages) {
+      lines.push(`[${msg.username}]: ${msg.message}`);
+    }
+    lines.push('');
+  }
+
+  lines.push('Mensaje actual:');
+  if (context.channel) lines.push(`#${context.channel}`);
+  if (context.username) lines.push(`[${context.username}]: ${message}`);
+
+  return lines.join('\n');
 }
 
 /**
  * Classify a chat message using Jev.
  * Returns an object with probabilities and boolean decisions per category.
  */
-export async function classifyMessage(endpoint, message, context, thresholds) {
-  const state = buildState(message, context);
+export async function classifyMessage(endpoint, message, context, thresholds, recentMessages = []) {
+  const state = buildState(message, context, recentMessages);
   const probabilities = await decideMany(endpoint, state, QUESTIONS);
 
   const decisions = {};

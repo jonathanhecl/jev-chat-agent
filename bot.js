@@ -5,10 +5,21 @@ import { classifyMessage } from './classifier.js';
 // Simple concurrency-1 queue to avoid overwhelming the Jev endpoint
 let queue = Promise.resolve();
 
+// Buffer of recent messages for context
+const recentBuffer = [];
+
 function enqueue(fn) {
   const result = queue.then(fn, fn);
   queue = result.catch(() => {});
   return result;
+}
+
+function pushRecent(username, message) {
+  recentBuffer.push({ username, message, ts: Date.now() });
+  const max = config.context.messageCount;
+  while (recentBuffer.length > max) {
+    recentBuffer.shift();
+  }
 }
 
 function logResult(username, message, result, elapsedMs) {
@@ -62,7 +73,7 @@ async function handleMessage(channel, tags, message, self, client) {
   try {
     const start = Date.now();
     const result = await enqueue(() =>
-      classifyMessage(config.jev.endpoint, message, context, config.thresholds)
+      classifyMessage(config.jev.endpoint, message, context, config.thresholds, recentBuffer)
     );
     const elapsed = Date.now() - start;
     logResult(username, message, result, elapsed);
@@ -72,6 +83,8 @@ async function handleMessage(channel, tags, message, self, client) {
     }
   } catch (err) {
     console.error(`[${username}] classification failed: ${err.message}`);
+  } finally {
+    pushRecent(username, message);
   }
 }
 
