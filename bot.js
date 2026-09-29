@@ -37,8 +37,8 @@ function logResult(username, message, result, elapsedMs) {
   const { decisions } = result;
 
   // Split into actionable flags and informational flags
-  const actionable = Object.entries(decisions).filter(([, d]) => d.flagged && !INFO_CATEGORIES.has([0]));
-  const informational = Object.entries(decisions).filter(([, d]) => d.flagged && INFO_CATEGORIES.has([0]));
+  const actionable = Object.entries(decisions).filter(([cat, d]) => d.flagged && !INFO_CATEGORIES.has(cat));
+  const informational = Object.entries(decisions).filter(([cat, d]) => d.flagged && INFO_CATEGORIES.has(cat));
 
   const isClean = actionable.length === 0 && informational.length === 0;
 
@@ -71,7 +71,7 @@ function logResult(username, message, result, elapsedMs) {
 
 async function sendChatMessage(client, channel, tags, result) {
   const { decisions } = result;
-  const flagged = Object.entries(decisions).filter(([, d]) => d.flagged && !INFO_CATEGORIES.has([0]));
+  const flagged = Object.entries(decisions).filter(([cat, d]) => d.flagged && !INFO_CATEGORIES.has(cat));
 
   if (flagged.length === 0) return;
 
@@ -88,7 +88,7 @@ async function sendChatMessage(client, channel, tags, result) {
 
 async function moderate(client, channel, tags, message, result) {
   const { decisions } = result;
-  const flagged = Object.entries(decisions).filter(([, d]) => d.flagged && !INFO_CATEGORIES.has([0]));
+  const flagged = Object.entries(decisions).filter(([cat, d]) => d.flagged && !INFO_CATEGORIES.has(cat));
 
   if (flagged.length === 0) return;
 
