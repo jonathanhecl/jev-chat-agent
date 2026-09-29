@@ -1,55 +1,60 @@
 # jev-chat-agent
 
-Bot de Twitch que clasifica mensajes en tiempo real usando [Jev-Style-2B-Decision-v3](https://huggingface.co/chaoliangUNSW/Jev-Style-2B-Decision-v3) y loguea el resultado. **Modo observador**: no borra mensajes ni aplica acciones de moderación.
+Twitch bot that classifies messages in real time using [Jev-Style-2B-Decision-v3](https://huggingface.co/chaoliangUNSW/Jev-Style-2B-Decision-v3) and logs the result. **Observer mode**: it does not delete messages or take any moderation action.
 
-## Requisitos
+## Requirements
 
 - Node.js 18+
-- Endpoint de Jev corriendo (ej. `http://mac-mini.local:8765/v1/systemone`)
+- A running Jev endpoint (e.g. `http://mac-mini.local:8765/v1/systemone`)
 
-## Instalación
+## Installation
 
 ```bash
 cp .env.example .env
-# Edita .env con tus credenciales
+# Edit .env with your credentials
 npm install
 npm start
 ```
 
-## Configuración
+## Configuration
 
-### Obtener el token de Twitch
+### Getting the Twitch token
 
-1. Ve a [twitchtokengenerator.com](https://twitchtokengenerator.com/)
-2. Genera un token (necesitas permisos de lectura de chat)
-3. Copia el **access token** y pégalo en `TWITCH_TOKEN` con el prefijo `oauth:`
+1. Go to [twitchtokengenerator.com](https://twitchtokengenerator.com/)
+2. Generate a token (you need chat read permissions)
+3. Copy the **access token** and paste it into `TWITCH_TOKEN` with the `oauth:` prefix
 
-Ejemplo: `TWITCH_TOKEN=oauth:abc123def456...`
+Example: `TWITCH_TOKEN=oauth:abc123def456...`
 
-> El bot solo lee y loguea, no necesita permisos de moderador.
+> With `MODERATION_ENABLED=false` the bot only reads and logs, so it does not need moderator permissions. To delete messages and time users out it needs moderator permissions and the bot account must be a moderator in the channel.
 
-| Variable | Descripción |
+| Variable | Description |
 |---|---|
-| `TWITCH_CHANNEL` | Canal a monitorear |
-| `TWITCH_USERNAME` | Nombre del bot |
-| `TWITCH_TOKEN` | OAuth token del bot |
-| `JEV_ENDPOINT` | URL del endpoint Jev |
-| `MODERATION_ENABLED` | `false` = solo log, `true` = borrar mensajes y timeout |
-| `CHAT_MESSAGES_ENABLED` | `false` = no enviar mensajes al chat, `true` = avisar en el chat cuando se detecta algo |
-| `JEV_CONTEXT_MESSAGES` | Número de mensajes recientes como contexto (default 3) |
-| `JEV_EXCLUDED_USERS` | Lista separada por comas de nicks excluidos (ej. `mod1,bot2`) |
-| `JEV_THRESHOLD_*` | Umbrales de clasificación (0.0–1.0). Usa `> 1` para desactivar una categoría |
+| `TWITCH_CHANNEL` | Channel to monitor |
+| `TWITCH_USERNAME` | Bot username |
+| `TWITCH_TOKEN` | Bot OAuth token |
+| `JEV_ENDPOINT` | URL of the Jev endpoint |
+| `MODERATION_ENABLED` | `false` = log only, `true` = delete messages and time out |
+| `CHAT_MESSAGES_ENABLED` | `false` = do not send chat messages, `true` = warn in chat when something is detected |
+| `JEV_CONTEXT_MESSAGES` | Number of recent messages used as context (default 3) |
+| `JEV_EXCLUDED_USERS` | Comma-separated list of excluded usernames (e.g. `mod1,bot2`) |
+| `JEV_THRESHOLD_*` | Classification thresholds (0.0–1.0). Use `> 1` to disable a category |
 
-## Categorías
+## Categories
 
-- **insulto** — lenguaje ofensivo dirigido a otro usuario
-- **spam** — contenido repetitivo o promoción no solicitada
-- **toxicidad** — lenguaje dañino o acoso
-- **links** — enlaces o URLs no permitidos
-- **atencion** — preguntas/consultas dirigidas al streamer
+- **insult** — offensive language directed at another user
+- **spam** — repetitive content or unsolicited promotion
+- **toxicity** — harmful language or harassment
+- **links** — disallowed links or URLs
+- **attention** — questions/requests directed at the streamer
 
-## Notas
+## Moderation
 
-- El bot usa una cola con concurrencia 1 para no saturar el endpoint Jev.
-- Los mensajes de más de 500 caracteres se omiten.
-- Reintentos automáticos con backoff si el endpoint falla.
+- `attention` is informational only. It is highlighted in yellow but **never** triggers deletion, a timeout, or a chat warning.
+- When `MODERATION_ENABLED=true`, messages flagged with a negative category (insult, spam, toxicity, links) are deleted and the user is timed out. Messages flagged only as `attention` are left untouched.
+
+## Notes
+
+- The bot uses a concurrency-1 queue so it does not overwhelm the Jev endpoint.
+- Messages longer than 500 characters are skipped.
+- Automatic retries with backoff if the endpoint fails.

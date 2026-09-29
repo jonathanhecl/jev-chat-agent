@@ -31,7 +31,7 @@ const RESET = '\x1b[0m';
 const DIM = '\x1b[2m';
 
 // Categories that are informational only (no moderation action, no chat message)
-const INFO_CATEGORIES = new Set(['atencion']);
+const INFO_CATEGORIES = new Set(['attention']);
 
 function logResult(username, message, result, elapsedMs) {
   const { decisions } = result;
@@ -42,12 +42,12 @@ function logResult(username, message, result, elapsedMs) {
 
   const isClean = actionable.length === 0 && informational.length === 0;
 
-  // If atencion is the dominant category (highest probability), show yellow
+  // If attention is the dominant category (highest probability), show yellow
   const allEntries = Object.entries(decisions);
   const dominant = allEntries.reduce((a, b) => (a[1].probability > b[1].probability ? a : b));
-  const atencionDominant = dominant[0] === 'atencion' && dominant[1].probability >= 0.5;
+  const attentionDominant = dominant[0] === 'attention' && dominant[1].probability >= 0.5;
 
-  const color = atencionDominant ? YELLOW : actionable.length > 0 ? RED : informational.length > 0 ? YELLOW : GREEN;
+  const color = attentionDominant ? YELLOW : actionable.length > 0 ? RED : informational.length > 0 ? YELLOW : GREEN;
 
   // Build percentage string for each category, bold if flagged
   // Re-apply the bracket color after bold reset to keep the bracket colored

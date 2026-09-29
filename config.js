@@ -42,10 +42,10 @@ export const config = {
     .map((u) => u.trim().toLowerCase())
     .filter(Boolean),
   thresholds: {
-    insulto: getThreshold('JEV_THRESHOLD_INSULTO'),
+    insult: getThreshold('JEV_THRESHOLD_INSULT'),
     spam: getThreshold('JEV_THRESHOLD_SPAM'),
-    toxicidad: getThreshold('JEV_THRESHOLD_TOXICIDAD'),
+    toxicity: getThreshold('JEV_THRESHOLD_TOXICITY'),
     links: getThreshold('JEV_THRESHOLD_LINKS'),
-    atencion: getThreshold('JEV_THRESHOLD_ATENCION'),
+    attention: getThreshold('JEV_THRESHOLD_ATTENTION'),
   },
 };
