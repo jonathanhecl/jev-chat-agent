@@ -26,7 +26,7 @@ export const config = {
     token: getEnv('TWITCH_TOKEN'),
   },
   jev: {
-    endpoint: getEnv('JEV_ENDPOINT', 'http://mac-mini.local:8765/v1/systemone'),
+    endpoint: getEnv('JEV_ENDPOINT', 'http://localhost:8765/v1/systemone'),
   },
   moderation: {
     enabled: getEnv('MODERATION_ENABLED', 'false') === 'true',

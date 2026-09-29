@@ -5,7 +5,7 @@ Twitch bot that classifies messages in real time using [Jev-Style-2B-Decision-v3
 ## Requirements
 
 - Node.js 18+
-- A running Jev endpoint (e.g. `http://mac-mini.local:8765/v1/systemone`)
+- A running Jev endpoint (e.g. `http://localhost:8765/v1/systemone`)
 
 ## Installation
 
