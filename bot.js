@@ -139,7 +139,7 @@ async function handleMessage(channel, tags, message, self, client) {
   try {
     const start = Date.now();
     const result = await enqueue(() =>
-      classifyMessage(config.jev.endpoint, message, context, config.thresholds, recentBuffer)
+      classifyMessage(config.jev.endpoint, message, context, config.thresholds, recentBuffer, config.jev.model)
     );
     const elapsed = Date.now() - start;
     logResult(username, message, result, elapsed);

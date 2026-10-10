@@ -5,7 +5,7 @@ Twitch bot that classifies messages in real time using [Jev-Style-2B-Decision-v3
 ## Requirements
 
 - Node.js 18+
-- A running Jev endpoint (e.g. `http://localhost:8765/v1/systemone`)
+- A running Jev endpoint (default `localhost`, port 11434)
 
 ## Installation
 
@@ -33,7 +33,8 @@ Example: `TWITCH_TOKEN=oauth:abc123def456...`
 | `TWITCH_CHANNEL` | Channel to monitor |
 | `TWITCH_USERNAME` | Bot username |
 | `TWITCH_TOKEN` | Bot OAuth token |
-| `JEV_ENDPOINT` | URL of the Jev endpoint |
+| `JEV_ENDPOINT` | Jev host with optional port (`host` or `host:port`); `http(s)://` scheme is optional. Defaults to `localhost` and port 11434 when omitted; `/v1/systemone` is appended automatically. Full `…/v1/systemone` URLs are still accepted |
+| `JEV_MODEL` | Required model name (e.g. `tev1:0.8b`) |
 | `MODERATION_ENABLED` | `false` = log only, `true` = delete messages and time out |
 | `CHAT_MESSAGES_ENABLED` | `false` = do not send chat messages, `true` = warn in chat when something is detected |
 | `JEV_CONTEXT_MESSAGES` | Number of recent messages used as context (default 3) |

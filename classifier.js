@@ -43,9 +43,9 @@ export function buildState(message, context = {}, recentMessages = []) {
  * Classify a chat message using Jev.
  * Returns an object with probabilities and boolean decisions per category.
  */
-export async function classifyMessage(endpoint, message, context, thresholds, recentMessages = []) {
+export async function classifyMessage(endpoint, message, context, thresholds, recentMessages = [], model) {
   const state = buildState(message, context, recentMessages);
-  const probabilities = await decideMany(endpoint, state, QUESTIONS);
+  const probabilities = await decideMany(endpoint, state, QUESTIONS, model);
 
   const decisions = {};
   for (const [id, q] of Object.entries(QUESTIONS)) {

@@ -22,9 +22,10 @@ async function sleep(ms) {
  * @param {Object} questions - Map of questionId -> { instructions: string }
  * @returns {Object} Map of questionId -> probability (0.0 - 1.0)
  */
-export async function decideMany(endpoint, state, questions) {
+export async function decideMany(endpoint, state, questions, model) {
   const payload = {
     state,
+    model,
     questions: Object.entries(questions).reduce((acc, [id, q]) => {
       acc[id] = { type: 'noul', instructions: q.instructions };
       return acc;

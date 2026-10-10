@@ -9,6 +9,35 @@ function getEnv(name, defaultValue) {
   return value;
 }
 
+const JEV_PATH = '/v1/systemone';
+
+function getJevEndpoint(raw) {
+  const value = raw.trim();
+  const withScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(value) ? value : `http://${value}`;
+  let url;
+  try {
+    url = new URL(withScheme);
+  } catch {
+    throw new Error('Invalid JEV_ENDPOINT');
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw new Error('Invalid JEV_ENDPOINT');
+  }
+  if (url.username || url.password || url.search || url.hash) {
+    throw new Error('Invalid JEV_ENDPOINT');
+  }
+  const path = url.pathname.replace(/\/+$/, '');
+  if (path !== '' && path !== JEV_PATH) {
+    throw new Error('Invalid JEV_ENDPOINT');
+  }
+  const authority = value
+    .replace(/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//, '')
+    .split(/[/?#]/)[0];
+  const explicitPort = /:\d+$/.test(authority);
+  const host = explicitPort ? url.host : `${url.host}:11434`;
+  return `${url.protocol}//${host}${JEV_PATH}`;
+}
+
 function getThreshold(name) {
   const raw = getEnv(name, '0.7');
   const value = parseFloat(raw);
@@ -26,7 +55,8 @@ export const config = {
     token: getEnv('TWITCH_TOKEN'),
   },
   jev: {
-    endpoint: getEnv('JEV_ENDPOINT', 'http://localhost:8765/v1/systemone'),
+    endpoint: getJevEndpoint(getEnv('JEV_ENDPOINT', 'localhost')),
+    model: getEnv('JEV_MODEL'),
   },
   moderation: {
     enabled: getEnv('MODERATION_ENABLED', 'false') === 'true',
