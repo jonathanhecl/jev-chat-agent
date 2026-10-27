@@ -49,6 +49,20 @@ export function formatOverlayUrl(host, port) {
   return `http://${hostPart}:${port}/`;
 }
 
+/**
+ * Build the payload consumed by the overlay. Attention-only messages carry a
+ * flag so the widget can render them with a blue glow.
+ */
+export function createOverlayMessage(username, text, decisions, maxChars = 140) {
+  return {
+    type: 'message',
+    username,
+    text: truncateText(text, maxChars),
+    attention: decisions?.attention?.flagged === true,
+    ts: Date.now(),
+  };
+}
+
 function send(res, status, body, headers = {}) {
   res.writeHead(status, {
     'Content-Type': 'text/plain; charset=utf-8',

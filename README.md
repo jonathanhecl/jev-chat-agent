@@ -63,7 +63,12 @@ Example: `TWITCH_TOKEN=oauth:abc123def456...`
 While the bot runs it also serves a transparent page sized for a 1920x1080
 browser source. Every message that is **not** flagged as insult, spam, toxicity
 or links becomes a danmaku line: it enters from the right and scrolls left,
-with new lines stacked on the next free row below.
+with new lines stacked on the next free row below. Lines flagged only as
+`attention` get a bright blue glow border; the page background stays fully
+transparent.
+
+The widget port and bind address come from `OVERLAY_PORT` and `OVERLAY_HOST`
+in `.env`.
 
 Add a **Browser** source in OBS:
 

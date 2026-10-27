@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  createOverlayMessage,
   createOverlayServer,
   formatOverlayUrl,
   shouldOverlay,
@@ -43,6 +44,25 @@ test('truncateText collapses whitespace and clips long lines', () => {
   const clipped = truncateText('a'.repeat(200), 20);
   assert.equal(clipped.length, 20);
   assert.ok(clipped.endsWith('…'));
+});
+
+test('createOverlayMessage flags attention-only messages for the blue glow', () => {
+  const message = createOverlayMessage(
+    'alice',
+    '  cuando juega?  ',
+    { attention: { flagged: true }, insult: { flagged: false } }
+  );
+  assert.equal(message.type, 'message');
+  assert.equal(message.username, 'alice');
+  assert.equal(message.text, 'cuando juega?');
+  assert.equal(message.attention, true);
+  assert.equal(typeof message.ts, 'number');
+
+  const plain = createOverlayMessage('bob', 'gg', { attention: { flagged: false } }, 20);
+  assert.equal(plain.attention, false);
+  assert.equal(plain.text, 'gg');
+
+  assert.equal(createOverlayMessage('carol', 'hi', undefined).attention, false);
 });
 
 test('formatOverlayUrl rewrites wildcard bind addresses', () => {

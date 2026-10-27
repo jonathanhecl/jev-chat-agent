@@ -46,7 +46,7 @@ function userColor(username) {
 
 function place(entry, lane, now) {
   const element = document.createElement('div');
-  element.className = 'danmaku';
+  element.className = entry.attention ? 'danmaku attention' : 'danmaku';
   element.style.top = `${SETTINGS.top + lane * LANE_HEIGHT}px`;
 
   if (SETTINGS.showNames && entry.username) {
@@ -108,7 +108,7 @@ function flush() {
  * Queue one chat line. Message text is always rendered with textContent,
  * so Twitch content cannot inject markup into the widget.
  */
-function push(username, text) {
+function push(username, text, attention = false) {
   const clean = String(text ?? '').replace(/\s+/g, ' ').trim();
   if (!clean) return;
 
@@ -116,7 +116,11 @@ function push(username, text) {
     ? `${clean.slice(0, SETTINGS.maxChars - 1).trimEnd()}…`
     : clean;
 
-  pending.push({ username: String(username || '').trim().slice(0, 40), text: clipped });
+  pending.push({
+    username: String(username || '').trim().slice(0, 40),
+    text: clipped,
+    attention: attention === true,
+  });
   if (pending.length > 250) pending.shift();
   flush();
 }
@@ -137,7 +141,7 @@ function connect() {
       return;
     }
     if (payload?.type && payload.type !== 'message') return;
-    push(payload?.username, payload?.text);
+    push(payload?.username, payload?.text, payload?.attention === true);
   });
 
   source.addEventListener('error', () => {
@@ -147,23 +151,23 @@ function connect() {
 }
 
 const DEMO_MESSAGES = [
-  { username: 'kitsune_92', text: 'こんにちは！初見です' },
+  { username: 'kitsune_92', text: 'こんにちは！初見です', attention: true },
   { username: 'sakura_mochi', text: 'このゲームうまいね' },
-  { username: 'hide', text: '¿de dónde sos?' },
+  { username: 'hide', text: '¿de dónde sos?', attention: true },
   { username: 'lin_wei', text: '主播好厉害' },
-  { username: 'tanghulu', text: '这是什么游戏？' },
+  { username: 'tanghulu', text: '这是什么游戏？', attention: true },
   { username: 'pixelpanda', text: 'that dodge was clean' },
   { username: 'mika_zzz', text: 'ganbatte! がんばれー' },
   { username: 'el_tano', text: 'buena jugada 👏' },
-  { username: 'neko_night', text: 'first time here, love the vibes' },
+  { username: 'neko_night', text: 'first time here, love the vibes', attention: true },
   { username: 'chen_88', text: '来了来了' },
-  { username: 'sofia.g', text: 'hola desde argentina 🇦🇷' },
+  { username: 'sofia.g', text: 'hola desde argentina 🇦🇷', attention: true },
   { username: 'drift_king', text: 'GG WP' },
   { username: 'yuki', text: 'そのスキル強すぎる' },
   { username: 'bubbletea', text: 'chat is so friendly today' },
-  { username: 'raul', text: '¿jugás ranked después?' },
+  { username: 'raul', text: '¿jugás ranked después?', attention: true },
   { username: 'ming', text: '哈哈哈哈太强了' },
-  { username: 'asuka__', text: '明日も配信ある？' },
+  { username: 'asuka__', text: '明日も配信ある？', attention: true },
   { username: 'n0va', text: 'the music in this level is so good' },
 ];
 
@@ -172,14 +176,14 @@ function startDemo() {
 
   const next = () => {
     const item = DEMO_MESSAGES[index++ % DEMO_MESSAGES.length];
-    push(item.username, item.text);
+    push(item.username, item.text, item.attention === true);
 
     if (Math.random() < 0.25) {
       const burst = 1 + Math.floor(Math.random() * 3);
       for (let i = 0; i < burst; i += 1) {
         setTimeout(() => {
           const extra = DEMO_MESSAGES[index++ % DEMO_MESSAGES.length];
-          push(extra.username, extra.text);
+          push(extra.username, extra.text, extra.attention === true);
         }, 80 + i * 140);
       }
     }

@@ -2,10 +2,10 @@ import tmi from 'tmi.js';
 import { config } from './config.js';
 import { classifyMessage } from './classifier.js';
 import {
+  createOverlayMessage,
   formatOverlayUrl,
   shouldOverlay,
   startOverlayServer,
-  truncateText,
 } from './overlayServer.js';
 
 // Simple concurrency-1 queue to avoid overwhelming the Jev endpoint
@@ -158,12 +158,9 @@ async function handleMessage(channel, tags, message, self, client) {
     logResult(username, message, result, elapsed);
 
     if (overlay && shouldOverlay(result.decisions)) {
-      overlay.broadcast({
-        type: 'message',
-        username,
-        text: truncateText(message, config.overlay.maxChars),
-        ts: Date.now(),
-      });
+      overlay.broadcast(
+        createOverlayMessage(username, message, result.decisions, config.overlay.maxChars)
+      );
     }
 
     if (config.chatMessages.enabled) {
