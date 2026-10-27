@@ -62,6 +62,7 @@ export const config = {
     channel: getEnv('TWITCH_CHANNEL'),
     username: getEnv('TWITCH_USERNAME'),
     token: getEnv('TWITCH_TOKEN'),
+    clientId: getEnv('TWITCH_CLIENT_ID', ''),
   },
   jev: {
     endpoint: getJevEndpoint(getEnv('JEV_ENDPOINT', 'localhost')),
@@ -78,6 +79,10 @@ export const config = {
     host: getEnv('OVERLAY_HOST', '127.0.0.1'),
     port: getInt('OVERLAY_PORT', 3000, 0, 65535),
     maxChars: getInt('OVERLAY_MAX_CHARS', 140, 20, 500),
+  },
+  redemptions: {
+    enabled: getEnv('REDEMPTIONS_ENABLED', 'true') === 'true',
+    highlightReward: getEnv('REDEMPTIONS_HIGHLIGHT_REWARD', ''),
   },
   context: {
     messageCount: parseInt(getEnv('JEV_CONTEXT_MESSAGES', '3'), 10) || 3,

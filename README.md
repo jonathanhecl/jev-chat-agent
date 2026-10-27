@@ -21,7 +21,7 @@ npm start
 ### Getting the Twitch token
 
 1. Go to [twitchtokengenerator.com](https://twitchtokengenerator.com/)
-2. Generate a token (you need chat read permissions)
+2. Generate a token with `chat:read` and `chat:edit` (add `channel:read:redemptions` for channel point redemption logs)
 3. Copy the **access token** and paste it into `TWITCH_TOKEN` with the `oauth:` prefix
 
 Example: `TWITCH_TOKEN=oauth:abc123def456...`
@@ -33,6 +33,7 @@ Example: `TWITCH_TOKEN=oauth:abc123def456...`
 | `TWITCH_CHANNEL` | Channel to monitor |
 | `TWITCH_USERNAME` | Bot username |
 | `TWITCH_TOKEN` | Bot OAuth token |
+| `TWITCH_CLIENT_ID` | Client ID of the app that generated the token (required for EventSub redemptions) |
 | `JEV_ENDPOINT` | Jev host with optional port (`host` or `host:port`); `http(s)://` scheme is optional. Defaults to `localhost` and port 11434 when omitted; `/v1/systemone` is appended automatically. Full `…/v1/systemone` URLs are still accepted |
 | `JEV_MODEL` | Required model name (e.g. `tev1:0.8b`) |
 | `MODERATION_ENABLED` | `false` = log only, `true` = delete messages and time out |
@@ -41,6 +42,8 @@ Example: `TWITCH_TOKEN=oauth:abc123def456...`
 | `OVERLAY_HOST` | Bind address for the overlay server (default `127.0.0.1`; use `0.0.0.0` for another PC on the LAN) |
 | `OVERLAY_PORT` | Overlay server port (default `3000`) |
 | `OVERLAY_MAX_CHARS` | Maximum characters per danmaku line (default `140`, clipped with `…`) |
+| `REDEMPTIONS_ENABLED` | `true` (default) logs channel point redemptions; `false` disables EventSub |
+| `REDEMPTIONS_HIGHLIGHT_REWARD` | Optional reward name to highlight in the redemption log |
 | `JEV_CONTEXT_MESSAGES` | Number of recent messages used as context (default 3) |
 | `JEV_EXCLUDED_USERS` | Comma-separated list of excluded usernames (e.g. `mod1,bot2`) |
 | `JEV_THRESHOLD_*` | Classification thresholds (0.0–1.0). Use `> 1` to disable a category |
@@ -98,6 +101,33 @@ Test it without the bot or Twitch with the demo URL:
 
 Messages are rendered with `textContent`, so chat content cannot inject HTML
 into the widget.
+
+## Channel point redemptions
+
+Twitch does not send channel point redemptions over IRC, so the bot listens to
+the `channel.channel_points_custom_reward_redemption.add` EventSub subscription
+over a WebSocket. No public webhook URL is needed.
+
+Every redemption is logged with the viewer, the reward, its cost and the viewer
+input:
+
+```
+🎁 redemption alice → Voz de Scorpion (500 pts) · "hola"
+```
+
+Setup:
+
+1. Generate a new token with `chat:read`, `chat:edit` and
+   `channel:read:redemptions` scopes.
+2. Put it in `TWITCH_TOKEN` and the app client ID in `TWITCH_CLIENT_ID`.
+3. Keep `REDEMPTIONS_ENABLED=true`.
+4. Optionally set `REDEMPTIONS_HIGHLIGHT_REWARD=Voz de Scorpion` to paint that
+   reward in yellow in the log.
+
+If the token lacks the scope, the bot prints
+`[redemptions] off: token lacks channel:read:redemptions` and keeps running
+normally. If Twitch rejects the subscription, generate the token with the
+broadcaster account instead of the bot account.
 
 ## Notes
 

@@ -7,6 +7,7 @@ import {
   shouldOverlay,
   startOverlayServer,
 } from './overlayServer.js';
+import { startRedemptions, summarizeRedemption } from './redemptions.js';
 
 // Simple concurrency-1 queue to avoid overwhelming the Jev endpoint
 let queue = Promise.resolve();
@@ -80,6 +81,18 @@ function logResult(username, message, result, elapsedMs) {
     : '';
 
   console.log(`[${username}] ${message} → ${color}[${parts.join(', ')}]${RESET}${infoStr}${timing}`);
+}
+
+function logRedemption(redemption) {
+  const reward = redemption.highlighted
+    ? `${BOLD}${YELLOW}${redemption.rewardTitle}${RESET}`
+    : redemption.rewardTitle;
+  const input = redemption.userInput ? ` ${DIM}· "${redemption.userInput}"${RESET}` : '';
+
+  console.log(
+    `${MAGENTA}🎁 redemption${RESET} ${BOLD}${redemption.userName}${RESET} → ` +
+      `${reward} (${redemption.cost} pts)${input}`
+  );
 }
 
 async function sendChatMessage(client, channel, tags, result) {
@@ -191,6 +204,25 @@ if (config.overlay.enabled) {
     });
 }
 
+let redemptions = null;
+
+if (config.redemptions.enabled) {
+  startRedemptions({
+    clientId: config.twitch.clientId,
+    token: config.twitch.token,
+    channel: config.twitch.channel,
+    highlightReward: config.redemptions.highlightReward,
+    onRedemption: (event) =>
+      logRedemption(summarizeRedemption(event, config.redemptions.highlightReward)),
+  })
+    .then((instance) => {
+      redemptions = instance;
+    })
+    .catch((err) => {
+      console.error(`[redemptions] failed to start: ${err.message}`);
+    });
+}
+
 const client = new tmi.Client({
   options: { debug: false },
   identity: {
@@ -206,6 +238,7 @@ client.on('connected', (addr, port) => {
   console.log(`Moderation: ${config.moderation.enabled ? 'ENABLED' : 'DISABLED (log only)'}`);
   console.log(`Chat messages: ${config.chatMessages.enabled ? 'ENABLED' : 'DISABLED'}`);
   console.log(`Overlay: ${config.overlay.enabled ? 'ENABLED' : 'DISABLED'}`);
+  console.log(`Redemptions: ${config.redemptions.enabled ? 'ENABLED' : 'DISABLED'}`);
   console.log(`Thresholds:`, config.thresholds);
 });
 
@@ -227,5 +260,6 @@ process.on('SIGINT', () => {
   console.log('\nDisconnecting...');
   client.disconnect();
   if (overlay) overlay.close().catch(() => {});
+  if (redemptions) redemptions.stop();
   process.exit(0);
 });
