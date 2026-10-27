@@ -135,10 +135,11 @@ When the highlighted reward (`REDEMPTIONS_HIGHLIGHT_REWARD`) is redeemed, the
 overlay spends 10 seconds burning every chat line red one by one, then shows a
 fiery "Scorpio" with the viewer's redemption phrase for another 10 seconds.
 Lines that arrive during those phases burn/redden too. When the label
-disappears, the red fades back to the normal colors over 4 seconds. If no chat
-lines are visible, only the label appears. Test it with `?scorpion=1`, or wait
-a few seconds in `?demo=1`; use `burn` and `hold` (ms) to shorten the effect
-while testing, e.g. `?scorpion=1&burn=1000&hold=3000`.
+disappears — after a 1.5 second fade — the red fades back to the normal colors
+over 4 seconds. If no chat lines are visible, only the label appears. Test it
+with `?scorpion=1`, or wait a few seconds in `?demo=1`; use `burn` and `hold`
+(ms) to shorten the effect while testing, e.g.
+`?scorpion=1&burn=1000&hold=3000`.
 
 The redemption phrase is classified before the overlay sees it. If it is
 insulting, toxic, spam or contains links — or if Jev cannot classify it — the

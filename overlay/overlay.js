@@ -36,6 +36,7 @@ const LANE_HEIGHT = Math.ceil(SETTINGS.fontSize * 1.7);
 const SCORPION_TEXT = 'Scorpio';
 const DEMO_SCORPION_PHRASE = 'esta es la frase de canjeo';
 const SCORPION_COLOR_FADE_MS = 4000;
+const SCORPION_LABEL_FADE_MS = 1500;
 const laneFreeAt = new Array(SETTINGS.lanes).fill(0);
 const pending = [];
 let flushTimer = null;
@@ -215,6 +216,9 @@ function triggerScorpion(phrase = '') {
       { duration: 420, easing: 'ease-out', fill: 'forwards' }
     );
 
+    const holdMs = SETTINGS.holdMs;
+    const fadeMs = Math.min(SCORPION_LABEL_FADE_MS, Math.max(200, holdMs));
+
     scheduleScorpion(() => {
       if (!layer.isConnected) return;
       layer.animate(
@@ -222,9 +226,9 @@ function triggerScorpion(phrase = '') {
           { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
           { opacity: 0, transform: 'translate(-50%, -50%) scale(1.15)' },
         ],
-        { duration: 400, easing: 'ease-in', fill: 'forwards' }
+        { duration: fadeMs, easing: 'ease-in', fill: 'forwards' }
       );
-    }, Math.max(0, SETTINGS.holdMs - 400));
+    }, Math.max(0, holdMs - fadeMs));
 
     scheduleScorpion(() => {
       layer.remove();
@@ -237,7 +241,7 @@ function triggerScorpion(phrase = '') {
       scheduleScorpion(() => {
         scorpionPhase = 'idle';
       }, SCORPION_COLOR_FADE_MS + 200);
-    }, SETTINGS.holdMs);
+    }, holdMs + 100);
   }, SETTINGS.burnMs);
 }
 
