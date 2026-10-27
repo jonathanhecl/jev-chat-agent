@@ -1,0 +1,68 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  font-family: 'Noto Sans CJK JP', 'Noto Sans JP', 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: var(--font-size, 40px);
+}
+
+.danmaku {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: #fff;
+  paint-order: stroke fill;
+  -webkit-text-stroke: 0.085em rgba(0, 0, 0, 0.78);
+  text-shadow: 0 0.05em 0.16em rgba(0, 0, 0, 0.8);
+  will-change: transform;
+  contain: layout style;
+}
+
+.danmaku .name {
+  color: var(--name-color, #9be7ff);
+}
+
+.danmaku .colon {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.danmaku .text {
+  color: #fff;
+  margin-left: 0.22em;
+}
+
+#status {
+  display: none;
+  position: fixed;
+  left: 16px;
+  bottom: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font: 600 16px/1.4 'Noto Sans', system-ui, sans-serif;
+}
+
+body.debug #status {
+  display: block;
+}
+
+body.debug:not(.connected) #status {
+  color: #ffd166;
+}

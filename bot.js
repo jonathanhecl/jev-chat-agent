@@ -1,6 +1,12 @@
 import tmi from 'tmi.js';
 import { config } from './config.js';
 import { classifyMessage } from './classifier.js';
+import {
+  formatOverlayUrl,
+  shouldOverlay,
+  startOverlayServer,
+  truncateText,
+} from './overlayServer.js';
 
 // Simple concurrency-1 queue to avoid overwhelming the Jev endpoint
 let queue = Promise.resolve();
@@ -151,6 +157,15 @@ async function handleMessage(channel, tags, message, self, client) {
     const elapsed = Date.now() - start;
     logResult(username, message, result, elapsed);
 
+    if (overlay && shouldOverlay(result.decisions)) {
+      overlay.broadcast({
+        type: 'message',
+        username,
+        text: truncateText(message, config.overlay.maxChars),
+        ts: Date.now(),
+      });
+    }
+
     if (config.chatMessages.enabled) {
       await sendChatMessage(client, channel, tags, result);
     }
@@ -163,6 +178,20 @@ async function handleMessage(channel, tags, message, self, client) {
   } finally {
     pushRecent(username, message);
   }
+}
+
+let overlay = null;
+
+if (config.overlay.enabled) {
+  startOverlayServer({ host: config.overlay.host, port: config.overlay.port })
+    .then((instance) => {
+      overlay = instance;
+      const url = formatOverlayUrl(config.overlay.host, instance.port);
+      console.log(`Overlay widget: ${url}  (demo: ${url}?demo=1)`);
+    })
+    .catch((err) => {
+      console.error(`Overlay server failed to start: ${err.message}`);
+    });
 }
 
 const client = new tmi.Client({
@@ -179,6 +208,7 @@ client.on('connected', (addr, port) => {
   console.log(`Monitoring #${config.twitch.channel} — Jev endpoint: ${config.jev.endpoint}`);
   console.log(`Moderation: ${config.moderation.enabled ? 'ENABLED' : 'DISABLED (log only)'}`);
   console.log(`Chat messages: ${config.chatMessages.enabled ? 'ENABLED' : 'DISABLED'}`);
+  console.log(`Overlay: ${config.overlay.enabled ? 'ENABLED' : 'DISABLED'}`);
   console.log(`Thresholds:`, config.thresholds);
 });
 
@@ -199,5 +229,6 @@ client.connect().catch((err) => {
 process.on('SIGINT', () => {
   console.log('\nDisconnecting...');
   client.disconnect();
+  if (overlay) overlay.close().catch(() => {});
   process.exit(0);
 });

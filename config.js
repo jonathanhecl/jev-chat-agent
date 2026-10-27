@@ -38,6 +38,15 @@ function getJevEndpoint(raw) {
   return `${url.protocol}//${host}${JEV_PATH}`;
 }
 
+function getInt(name, defaultValue, min, max) {
+  const raw = getEnv(name, String(defaultValue));
+  const value = Number.parseInt(raw, 10);
+  if (!Number.isInteger(value) || value < min || value > max) {
+    throw new Error(`Invalid value for ${name}: ${raw}`);
+  }
+  return value;
+}
+
 function getThreshold(name) {
   const raw = getEnv(name, '0.7');
   const value = parseFloat(raw);
@@ -63,6 +72,12 @@ export const config = {
   },
   chatMessages: {
     enabled: getEnv('CHAT_MESSAGES_ENABLED', 'false') === 'true',
+  },
+  overlay: {
+    enabled: getEnv('OVERLAY_ENABLED', 'true') === 'true',
+    host: getEnv('OVERLAY_HOST', '127.0.0.1'),
+    port: getInt('OVERLAY_PORT', 3000, 0, 65535),
+    maxChars: getInt('OVERLAY_MAX_CHARS', 140, 20, 500),
   },
   context: {
     messageCount: parseInt(getEnv('JEV_CONTEXT_MESSAGES', '3'), 10) || 3,
