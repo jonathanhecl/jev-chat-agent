@@ -31,9 +31,17 @@ const SETTINGS = {
 };
 
 const LANE_HEIGHT = Math.ceil(SETTINGS.fontSize * 1.7);
+const SCORPION_TEXT = 'Scorpio';
+const DEMO_SCORPION_PHRASE = 'esta es la frase de canjeo';
+const SCORPION_HOLD_MS = 10000;
 const laneFreeAt = new Array(SETTINGS.lanes).fill(0);
 const pending = [];
 let flushTimer = null;
+
+let scorpionActive = false;
+let scorpionEndTimer = null;
+let scorpionFadeTimer = null;
+let scorpionSafetyTimer = null;
 
 document.documentElement.style.setProperty('--font-size', `${SETTINGS.fontSize}px`);
 if (SETTINGS.debug) document.body.classList.add('debug');
@@ -47,6 +55,7 @@ function userColor(username) {
 function place(entry, lane, now) {
   const element = document.createElement('div');
   element.className = entry.attention ? 'danmaku attention' : 'danmaku';
+  if (scorpionActive) element.classList.add('scorpion');
   element.style.top = `${SETTINGS.top + lane * LANE_HEIGHT}px`;
 
   if (SETTINGS.showNames && entry.username) {
@@ -108,8 +117,7 @@ function flush() {
  * Queue one chat line. Message text is always rendered with textContent,
  * so Twitch content cannot inject markup into the widget.
  */
-function push(username, text, attention = false) {
-  const clean = String(text ?? '').replace(/\s+/g, ' ').trim();
+function push(username, text, attention = false) {  const clean = String(text ?? '').replace(/\s+/g, ' ').trim();
   if (!clean) return;
 
   const clipped = clean.length > SETTINGS.maxChars
@@ -123,6 +131,73 @@ function push(username, text, attention = false) {
   });
   if (pending.length > 250) pending.shift();
   flush();
+}
+
+/**
+ * "Scorpio" reward: paint chat lines red and drop a fiery label with the
+ * redemption phrase in the middle of the screen. New lines stay red until
+ * the label disappears after 10 seconds; then every line returns to normal.
+ */
+function triggerScorpion(phrase = '') {
+  scorpionActive = true;
+
+  for (const element of document.querySelectorAll('.danmaku')) {
+    element.classList.add('scorpion');
+  }
+
+  if (scorpionEndTimer) clearTimeout(scorpionEndTimer);
+  if (scorpionFadeTimer) clearTimeout(scorpionFadeTimer);
+  if (scorpionSafetyTimer) clearTimeout(scorpionSafetyTimer);
+  document.getElementById('scorpion')?.remove();
+
+  const layer = document.createElement('div');
+  layer.id = 'scorpion';
+
+  const label = document.createElement('span');
+  label.className = 'scorpion-text';
+  label.dataset.text = SCORPION_TEXT;
+  label.textContent = SCORPION_TEXT;
+  layer.append(label);
+
+  const cleanPhrase = String(phrase ?? '').replace(/\s+/g, ' ').trim().slice(0, 120);
+  if (cleanPhrase) {
+    const phraseElement = document.createElement('span');
+    phraseElement.className = 'scorpion-phrase';
+    phraseElement.textContent = cleanPhrase;
+    layer.append(phraseElement);
+  }
+
+  document.body.append(layer);
+
+  layer.animate(
+    [
+      { opacity: 0, transform: 'translate(-50%, -50%) scale(0.55)' },
+      { opacity: 1, transform: 'translate(-50%, -50%) scale(1.05)' },
+      { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
+    ],
+    { duration: 420, easing: 'ease-out', fill: 'forwards' }
+  );
+
+  scorpionFadeTimer = window.setTimeout(() => {
+    if (!layer.isConnected) return;
+    layer.animate(
+      [
+        { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
+        { opacity: 0, transform: 'translate(-50%, -50%) scale(1.15)' },
+      ],
+      { duration: 400, easing: 'ease-in', fill: 'forwards' }
+    );
+  }, SCORPION_HOLD_MS - 400);
+
+  scorpionEndTimer = window.setTimeout(() => {
+    layer.remove();
+    scorpionActive = false;
+    for (const element of document.querySelectorAll('.danmaku')) {
+      element.classList.remove('scorpion');
+    }
+  }, SCORPION_HOLD_MS);
+
+  scorpionSafetyTimer = window.setTimeout(() => layer.remove(), SCORPION_HOLD_MS + 500);
 }
 
 function connect() {
@@ -142,6 +217,17 @@ function connect() {
     }
     if (payload?.type && payload.type !== 'message') return;
     push(payload?.username, payload?.text, payload?.attention === true);
+  });
+
+  source.addEventListener('redemption', (event) => {
+    let payload;
+    try {
+      payload = JSON.parse(event.data);
+    } catch {
+      return;
+    }
+    if (payload?.type !== 'redemption') return;
+    triggerScorpion(payload.phrase);
   });
 
   source.addEventListener('error', () => {
@@ -199,8 +285,14 @@ if (SETTINGS.demo) {
   document.body.classList.add('demo', 'connected');
   statusEl.textContent = 'overlay · demo mode';
   startDemo();
+  window.setTimeout(() => triggerScorpion(DEMO_SCORPION_PHRASE), 4500);
+  window.setInterval(() => triggerScorpion(DEMO_SCORPION_PHRASE), 22000);
 } else {
   connect();
+}
+
+if (flag('scorpion', false)) {
+  window.setTimeout(() => triggerScorpion(DEMO_SCORPION_PHRASE), 800);
 }
 
 window.overlay = {

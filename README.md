@@ -97,6 +97,7 @@ Test it without the bot or Twitch with the demo URL:
 | `chars` | `140` | Maximum characters per line |
 | `names` | on | `names=0` hides usernames |
 | `debug` | off | Show the connection badge (`debug=1`) |
+| `scorpion` | off | Fire the "Scorpio" effect with a sample phrase (`scorpion=1`) |
 | `demoMin` / `demoMax` | `400` / `1700` | Demo delay range in ms |
 
 Messages are rendered with `textContent`, so chat content cannot inject HTML
@@ -128,6 +129,13 @@ If the token lacks the scope, the bot prints
 `[redemptions] off: token lacks channel:read:redemptions` and keeps running
 normally. If Twitch rejects the subscription, generate the token with the
 broadcaster account instead of the bot account.
+
+When the highlighted reward (`REDEMPTIONS_HIGHLIGHT_REWARD`) is redeemed, the
+overlay turns every chat line red and shows a fiery "Scorpio" plus the viewer's
+redemption phrase in the middle of the screen for 10 seconds. New messages that
+arrive during that window are also red; everything returns to normal when the
+label disappears. If no chat lines are visible, only the label appears. Test it
+with `?scorpion=1`, or wait a few seconds in `?demo=1`.
 
 ## Notes
 

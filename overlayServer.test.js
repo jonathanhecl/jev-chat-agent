@@ -85,6 +85,7 @@ test('serves the overlay page and refuses path traversal', async (t) => {
   const page = await fetch(`${base}/`);
   assert.equal(page.status, 200);
   assert.match(page.headers.get('content-type'), /text\/html/);
+  assert.equal(page.headers.get('cache-control'), 'no-store');
   assert.match(await page.text(), /id="stage"/);
 
   const script = await fetch(`${base}/overlay.js`);

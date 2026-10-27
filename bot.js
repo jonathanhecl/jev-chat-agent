@@ -212,8 +212,20 @@ if (config.redemptions.enabled) {
     token: config.twitch.token,
     channel: config.twitch.channel,
     highlightReward: config.redemptions.highlightReward,
-    onRedemption: (event) =>
-      logRedemption(summarizeRedemption(event, config.redemptions.highlightReward)),
+    onRedemption: (event) => {
+      const redemption = summarizeRedemption(event, config.redemptions.highlightReward);
+      logRedemption(redemption);
+
+      if (redemption.highlighted && overlay) {
+        overlay.broadcast({
+          type: 'redemption',
+          reward: redemption.rewardTitle,
+          username: redemption.userName,
+          phrase: redemption.userInput,
+          ts: Date.now(),
+        });
+      }
+    },
   })
     .then((instance) => {
       redemptions = instance;

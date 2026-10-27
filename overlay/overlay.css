@@ -60,6 +60,145 @@ body {
   animation: attention-glow 1.15s ease-in-out infinite alternate;
 }
 
+/* Scorpio reward: every on-screen chat line burns red */
+.danmaku.scorpion,
+.danmaku.scorpion .name,
+.danmaku.scorpion .colon,
+.danmaku.scorpion .text {
+  color: #ff3b2f;
+}
+
+.danmaku.scorpion,
+.danmaku.scorpion.attention {
+  animation: none;
+  text-shadow:
+    0 0.05em 0.16em rgba(0, 0, 0, 0.85),
+    0 0 0.16em rgba(255, 100, 65, 0.95),
+    0 0 0.45em rgba(255, 45, 20, 0.75);
+}
+
+/* Fiery "Scorpio" announced in the middle of the screen */
+#scorpion {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 5;
+  transform: translate(-50%, -50%);
+  transform-origin: center;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
+  display: grid;
+  justify-items: center;
+  gap: 0.08em;
+  max-width: 92vw;
+  text-align: center;
+  font-family: 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+  font-size: clamp(96px, 13vw, 260px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+#scorpion .scorpion-text {
+  position: relative;
+  display: block;
+  white-space: nowrap;
+  background-image: linear-gradient(
+    180deg,
+    #fff8d8 0%,
+    #ffe066 20%,
+    #ffb300 46%,
+    #ff5a00 74%,
+    #d21f00 100%
+  );
+  background-size: 100% 180%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter:
+    drop-shadow(0 0 0.06em rgba(255, 235, 170, 0.95))
+    drop-shadow(0 0 0.22em rgba(255, 130, 0, 0.85))
+    drop-shadow(0 0 0.55em rgba(255, 45, 0, 0.55));
+  animation:
+    scorpion-flicker 0.55s ease-in-out infinite alternate,
+    scorpion-heat 1.2s ease-in-out infinite alternate;
+}
+
+#scorpion .scorpion-text::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  color: #ff4d00;
+  -webkit-text-fill-color: #ff4d00;
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  filter: blur(0.16em);
+  opacity: 0.8;
+  animation: scorpion-flicker 0.37s ease-in-out infinite alternate-reverse;
+}
+
+#scorpion .scorpion-phrase {
+  max-width: min(86vw, 1400px);
+  font-size: clamp(22px, 2.6vw, 54px);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  color: #ffe9c7;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-shadow:
+    0 0.04em 0.1em rgba(0, 0, 0, 0.9),
+    0 0 0.25em rgba(255, 150, 50, 0.9),
+    0 0 0.7em rgba(255, 70, 0, 0.6);
+  animation: scorpion-flicker 0.7s ease-in-out infinite alternate;
+}
+
+#scorpion .scorpion-phrase::before {
+  content: '“';
+}
+
+#scorpion .scorpion-phrase::after {
+  content: '”';
+}
+
+#scorpion .scorpion-text::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  color: #ff4d00;
+  -webkit-text-fill-color: #ff4d00;
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  filter: blur(0.16em);
+  opacity: 0.8;
+  animation: scorpion-flicker 0.37s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes scorpion-flicker {
+  from {
+    opacity: 0.9;
+    transform: scale(1) skewX(-0.6deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.02) skewX(0.6deg);
+  }
+}
+
+@keyframes scorpion-heat {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 80%;
+  }
+}
+
 .danmaku .name {
   color: var(--name-color, #9be7ff);
 }
