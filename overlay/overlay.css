@@ -34,6 +34,15 @@ body {
   text-shadow: 0 0.05em 0.16em rgba(0, 0, 0, 0.8);
   will-change: transform;
   contain: layout style;
+  transition:
+    color 4s ease-in-out,
+    text-shadow 4s ease-in-out;
+}
+
+.danmaku .name,
+.danmaku .colon,
+.danmaku .text {
+  transition: color 4s ease-in-out;
 }
 
 /* attention: blue neon glow that follows the letter outlines and breathes */
@@ -60,7 +69,11 @@ body {
   animation: attention-glow 1.15s ease-in-out infinite alternate;
 }
 
-/* Scorpio reward: every on-screen chat line burns red */
+/* Scorpio reward: chat lines burn red one by one, then cool back down */
+.danmaku.burning,
+.danmaku.burning .name,
+.danmaku.burning .colon,
+.danmaku.burning .text,
 .danmaku.scorpion,
 .danmaku.scorpion .name,
 .danmaku.scorpion .colon,
@@ -68,6 +81,8 @@ body {
   color: #ff3b2f;
 }
 
+.danmaku.burning,
+.danmaku.burning.attention,
 .danmaku.scorpion,
 .danmaku.scorpion.attention {
   animation: none;
@@ -75,6 +90,13 @@ body {
     0 0.05em 0.16em rgba(0, 0, 0, 0.85),
     0 0 0.16em rgba(255, 100, 65, 0.95),
     0 0 0.45em rgba(255, 45, 20, 0.75);
+}
+
+.danmaku.scorpion,
+.danmaku.scorpion .name,
+.danmaku.scorpion .colon,
+.danmaku.scorpion .text {
+  transition-duration: 0.35s;
 }
 
 /* Fiery "Scorpio" announced in the middle of the screen */

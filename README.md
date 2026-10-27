@@ -98,6 +98,7 @@ Test it without the bot or Twitch with the demo URL:
 | `names` | on | `names=0` hides usernames |
 | `debug` | off | Show the connection badge (`debug=1`) |
 | `scorpion` | off | Fire the "Scorpio" effect with a sample phrase (`scorpion=1`) |
+| `burn` / `hold` | `10000` / `10000` | Test override in ms: burn-in time before "Scorpio" and time it stays visible |
 | `demoMin` / `demoMax` | `400` / `1700` | Demo delay range in ms |
 
 Messages are rendered with `textContent`, so chat content cannot inject HTML
@@ -131,11 +132,17 @@ normally. If Twitch rejects the subscription, generate the token with the
 broadcaster account instead of the bot account.
 
 When the highlighted reward (`REDEMPTIONS_HIGHLIGHT_REWARD`) is redeemed, the
-overlay turns every chat line red and shows a fiery "Scorpio" plus the viewer's
-redemption phrase in the middle of the screen for 10 seconds. New messages that
-arrive during that window are also red; everything returns to normal when the
-label disappears. If no chat lines are visible, only the label appears. Test it
-with `?scorpion=1`, or wait a few seconds in `?demo=1`.
+overlay spends 10 seconds burning every chat line red one by one, then shows a
+fiery "Scorpio" with the viewer's redemption phrase for another 10 seconds.
+Lines that arrive during those phases burn/redden too. When the label
+disappears, the red fades back to the normal colors over 4 seconds. If no chat
+lines are visible, only the label appears. Test it with `?scorpion=1`, or wait
+a few seconds in `?demo=1`; use `burn` and `hold` (ms) to shorten the effect
+while testing, e.g. `?scorpion=1&burn=1000&hold=3000`.
+
+The redemption phrase is classified before the overlay sees it. If it is
+insulting, toxic, spam or contains links — or if Jev cannot classify it — the
+phrase is dropped and only "Scorpio" is shown.
 
 ## Notes
 

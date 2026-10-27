@@ -95,6 +95,59 @@ function logRedemption(redemption) {
   );
 }
 
+/**
+ * Log a redemption and, for the highlighted reward, tell the overlay to burn
+ * the chat. The viewer's phrase is classified first and dropped when it is
+ * insulting, toxic, spam or a link, so unsafe text never reaches the stream.
+ */
+async function handleRedemption(event) {
+  try {
+    const redemption = summarizeRedemption(event, config.redemptions.highlightReward);
+    logRedemption(redemption);
+
+    if (!redemption.highlighted || !overlay) return;
+
+    let phrase = redemption.userInput;
+
+    if (phrase) {
+      try {
+        const result = await enqueue(() =>
+          classifyMessage(
+            config.jev.endpoint,
+            phrase,
+            { channel: config.twitch.channel, username: redemption.userName },
+            config.thresholds,
+            recentBuffer,
+            config.jev.model
+          )
+        );
+
+        if (!shouldOverlay(result.decisions)) {
+          const flagged = Object.entries(result.decisions)
+            .filter(([, decision]) => decision.flagged)
+            .map(([category, decision]) => `${category} ${(decision.probability * 100).toFixed(0)}%`);
+
+          console.log(`  ↳ Scorpio phrase hidden (${flagged.join(', ')})`);
+          phrase = '';
+        }
+      } catch (err) {
+        console.error(`  ↳ Scorpio phrase hidden (classification failed: ${err.message})`);
+        phrase = '';
+      }
+    }
+
+    overlay.broadcast({
+      type: 'redemption',
+      reward: redemption.rewardTitle,
+      username: redemption.userName,
+      phrase,
+      ts: Date.now(),
+    });
+  } catch (err) {
+    console.error(`[redemptions] failed to handle event: ${err.message}`);
+  }
+}
+
 async function sendChatMessage(client, channel, tags, result) {
   const { decisions } = result;
   const flagged = Object.entries(decisions).filter(([cat, d]) => d.flagged && !INFO_CATEGORIES.has(cat));
@@ -212,20 +265,7 @@ if (config.redemptions.enabled) {
     token: config.twitch.token,
     channel: config.twitch.channel,
     highlightReward: config.redemptions.highlightReward,
-    onRedemption: (event) => {
-      const redemption = summarizeRedemption(event, config.redemptions.highlightReward);
-      logRedemption(redemption);
-
-      if (redemption.highlighted && overlay) {
-        overlay.broadcast({
-          type: 'redemption',
-          reward: redemption.rewardTitle,
-          username: redemption.userName,
-          phrase: redemption.userInput,
-          ts: Date.now(),
-        });
-      }
-    },
+    onRedemption: handleRedemption,
   })
     .then((instance) => {
       redemptions = instance;

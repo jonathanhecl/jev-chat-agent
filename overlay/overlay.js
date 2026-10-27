@@ -28,20 +28,21 @@ const SETTINGS = {
   debug: flag('debug', false),
   demoMin: clamp(number('demoMin', 400), 100, 60000),
   demoMax: clamp(number('demoMax', 1700), 200, 60000),
+  burnMs: Math.round(clamp(number('burn', 10000), 0, 60000)),
+  holdMs: Math.round(clamp(number('hold', 10000), 200, 60000)),
 };
 
 const LANE_HEIGHT = Math.ceil(SETTINGS.fontSize * 1.7);
 const SCORPION_TEXT = 'Scorpio';
 const DEMO_SCORPION_PHRASE = 'esta es la frase de canjeo';
-const SCORPION_HOLD_MS = 10000;
+const SCORPION_COLOR_FADE_MS = 4000;
 const laneFreeAt = new Array(SETTINGS.lanes).fill(0);
 const pending = [];
 let flushTimer = null;
 
-let scorpionActive = false;
-let scorpionEndTimer = null;
-let scorpionFadeTimer = null;
-let scorpionSafetyTimer = null;
+let scorpionPhase = 'idle';
+let scorpionTimers = [];
+const burnTimers = new Set();
 
 document.documentElement.style.setProperty('--font-size', `${SETTINGS.fontSize}px`);
 if (SETTINGS.debug) document.body.classList.add('debug');
@@ -55,7 +56,6 @@ function userColor(username) {
 function place(entry, lane, now) {
   const element = document.createElement('div');
   element.className = entry.attention ? 'danmaku attention' : 'danmaku';
-  if (scorpionActive) element.classList.add('scorpion');
   element.style.top = `${SETTINGS.top + lane * LANE_HEIGHT}px`;
 
   if (SETTINGS.showNames && entry.username) {
@@ -81,6 +81,9 @@ function place(entry, lane, now) {
   const width = Math.ceil(element.getBoundingClientRect().width);
   const endX = -width - 24;
   const duration = ((startX - endX) / SETTINGS.speed) * 1000;
+
+  if (scorpionPhase === 'burn') element.classList.add('burning');
+  else if (scorpionPhase === 'show') element.classList.add('scorpion');
 
   const animation = element.animate(
     [
@@ -117,7 +120,8 @@ function flush() {
  * Queue one chat line. Message text is always rendered with textContent,
  * so Twitch content cannot inject markup into the widget.
  */
-function push(username, text, attention = false) {  const clean = String(text ?? '').replace(/\s+/g, ' ').trim();
+function push(username, text, attention = false) {
+  const clean = String(text ?? '').replace(/\s+/g, ' ').trim();
   if (!clean) return;
 
   const clipped = clean.length > SETTINGS.maxChars
@@ -133,23 +137,22 @@ function push(username, text, attention = false) {  const clean = String(text ??
   flush();
 }
 
-/**
- * "Scorpio" reward: paint chat lines red and drop a fiery label with the
- * redemption phrase in the middle of the screen. New lines stay red until
- * the label disappears after 10 seconds; then every line returns to normal.
- */
-function triggerScorpion(phrase = '') {
-  scorpionActive = true;
+function scheduleScorpion(fn, delay) {
+  const id = window.setTimeout(fn, delay);
+  scorpionTimers.push(id);
+  return id;
+}
 
-  for (const element of document.querySelectorAll('.danmaku')) {
-    element.classList.add('scorpion');
-  }
-
-  if (scorpionEndTimer) clearTimeout(scorpionEndTimer);
-  if (scorpionFadeTimer) clearTimeout(scorpionFadeTimer);
-  if (scorpionSafetyTimer) clearTimeout(scorpionSafetyTimer);
+function resetScorpion() {
+  for (const id of scorpionTimers) clearTimeout(id);
+  scorpionTimers = [];
+  for (const id of burnTimers) clearTimeout(id);
+  burnTimers.clear();
+  scorpionPhase = 'idle';
   document.getElementById('scorpion')?.remove();
+}
 
+function buildScorpionLabel(phrase) {
   const layer = document.createElement('div');
   layer.id = 'scorpion';
 
@@ -167,37 +170,75 @@ function triggerScorpion(phrase = '') {
     layer.append(phraseElement);
   }
 
-  document.body.append(layer);
+  return layer;
+}
 
-  layer.animate(
-    [
-      { opacity: 0, transform: 'translate(-50%, -50%) scale(0.55)' },
-      { opacity: 1, transform: 'translate(-50%, -50%) scale(1.05)' },
-      { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
-    ],
-    { duration: 420, easing: 'ease-out', fill: 'forwards' }
-  );
+/**
+ * Burns every chat line red over the first 10 seconds, then shows "Scorpio"
+ * with the redemption phrase for another 10 seconds, and finally lets the red
+ * fade back to normal over 4 seconds. Lines that arrive during the first two
+ * phases burn too; lines that arrive during the fade stay normal.
+ */
+function triggerScorpion(phrase = '') {
+  resetScorpion();
+  scorpionPhase = 'burn';
 
-  scorpionFadeTimer = window.setTimeout(() => {
-    if (!layer.isConnected) return;
+  for (const element of document.querySelectorAll('.danmaku')) {
+    const delay = Math.random() * 5500;
+    if (delay < 40) {
+      element.classList.add('burning');
+    } else {
+      const id = window.setTimeout(() => element.classList.add('burning'), delay);
+      burnTimers.add(id);
+    }
+  }
+
+  scheduleScorpion(() => {
+    for (const id of burnTimers) clearTimeout(id);
+    burnTimers.clear();
+
+    scorpionPhase = 'show';
+    for (const element of document.querySelectorAll('.danmaku')) {
+      element.classList.remove('burning');
+      element.classList.add('scorpion');
+    }
+
+    const layer = buildScorpionLabel(phrase);
+    document.body.append(layer);
+
     layer.animate(
       [
+        { opacity: 0, transform: 'translate(-50%, -50%) scale(0.55)' },
+        { opacity: 1, transform: 'translate(-50%, -50%) scale(1.05)' },
         { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
-        { opacity: 0, transform: 'translate(-50%, -50%) scale(1.15)' },
       ],
-      { duration: 400, easing: 'ease-in', fill: 'forwards' }
+      { duration: 420, easing: 'ease-out', fill: 'forwards' }
     );
-  }, SCORPION_HOLD_MS - 400);
 
-  scorpionEndTimer = window.setTimeout(() => {
-    layer.remove();
-    scorpionActive = false;
-    for (const element of document.querySelectorAll('.danmaku')) {
-      element.classList.remove('scorpion');
-    }
-  }, SCORPION_HOLD_MS);
+    scheduleScorpion(() => {
+      if (!layer.isConnected) return;
+      layer.animate(
+        [
+          { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
+          { opacity: 0, transform: 'translate(-50%, -50%) scale(1.15)' },
+        ],
+        { duration: 400, easing: 'ease-in', fill: 'forwards' }
+      );
+    }, Math.max(0, SETTINGS.holdMs - 400));
 
-  scorpionSafetyTimer = window.setTimeout(() => layer.remove(), SCORPION_HOLD_MS + 500);
+    scheduleScorpion(() => {
+      layer.remove();
+      scorpionPhase = 'fade';
+
+      for (const element of document.querySelectorAll('.danmaku')) {
+        element.classList.remove('scorpion', 'burning');
+      }
+
+      scheduleScorpion(() => {
+        scorpionPhase = 'idle';
+      }, SCORPION_COLOR_FADE_MS + 200);
+    }, SETTINGS.holdMs);
+  }, SETTINGS.burnMs);
 }
 
 function connect() {
