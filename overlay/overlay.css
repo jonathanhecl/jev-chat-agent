@@ -36,18 +36,14 @@ body {
   contain: layout style;
 }
 
-/* attention: messages directed at the streamer get a bright blue glow border */
+/* attention: blue neon glow that follows the letter outlines, no box */
 .danmaku.attention {
-  padding: 0.04em 0.26em;
-  border-radius: 0.32em;
   text-shadow:
     0 0.05em 0.16em rgba(0, 0, 0, 0.85),
-    0 0 0.18em rgba(130, 205, 255, 0.95),
-    0 0 0.5em rgba(70, 165, 255, 0.75);
-  box-shadow:
-    0 0 0 0.05em rgba(130, 205, 255, 0.95),
-    0 0 0.4em 0.06em rgba(70, 165, 255, 0.8),
-    0 0 0.8em 0.1em rgba(40, 130, 255, 0.4);
+    0 0 0.1em rgba(190, 235, 255, 1),
+    0 0 0.24em rgba(110, 195, 255, 0.95),
+    0 0 0.5em rgba(45, 140, 255, 0.8),
+    0 0 0.85em rgba(30, 110, 255, 0.5);
 }
 
 .danmaku .name {
