@@ -69,7 +69,7 @@ export function describePlan(plan) {
 export function genericRedemptionAnnouncement(redemption = {}) {
   return createAnnouncement({
     kind: 'redemption',
-    title: redemption.rewardTitle ?? 'Reward redeemed',
+    title: redemption.rewardTitle ?? 'Recompensa canjeada',
     username: redemption.userName ?? 'unknown',
     detail: redemption.userInput ?? '',
     important: false,
@@ -97,7 +97,7 @@ export function subAnnouncement(username, plan = '', message = '') {
   const detail = [plan, message].filter(Boolean).join(' · ');
   return createAnnouncement({
     kind: 'sub',
-    title: 'New SUB',
+    title: 'Nuevo SUB',
     username,
     detail,
     important: true,
@@ -111,7 +111,7 @@ export function resubAnnouncement(username, months, plan = '', message = '') {
   const detail = [plan, message].filter(Boolean).join(' · ');
   return createAnnouncement({
     kind: 'sub',
-    title: `Resub x${Number(months) || 1}`,
+    title: `SUB renovado x${Number(months) || 1}`,
     username,
     detail,
     important: true,
@@ -122,10 +122,10 @@ export function resubAnnouncement(username, months, plan = '', message = '') {
  * Important banner for a gifted subscription.
  */
 export function subGiftAnnouncement(gifter, recipient, plan = '') {
-  const detail = [`to ${recipient ?? 'unknown'}`, plan].filter(Boolean).join(' · ');
+  const detail = [`para ${recipient ?? 'unknown'}`, plan].filter(Boolean).join(' · ');
   return createAnnouncement({
     kind: 'sub',
-    title: 'Gift Sub',
+    title: 'SUB regalado',
     username: gifter,
     detail,
     important: true,
@@ -139,7 +139,7 @@ export function mysteryGiftAnnouncement(username, count) {
   const total = Number(count) || 0;
   return createAnnouncement({
     kind: 'sub',
-    title: `${total} Gift Subs`,
+    title: `${total} SUBs regalados`,
     username,
     detail: '',
     important: true,

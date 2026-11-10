@@ -301,7 +301,7 @@ function connect() {
 
   source.addEventListener('open', () => {
     document.body.classList.add('connected');
-    statusEl.textContent = 'overlay · connected';
+    statusEl.textContent = 'overlay · conectado';
   });
 
   source.addEventListener('message', (event) => {
@@ -338,7 +338,7 @@ function connect() {
 
   source.addEventListener('error', () => {
     document.body.classList.remove('connected');
-    statusEl.textContent = 'overlay · reconnecting…';
+    statusEl.textContent = 'overlay · reconectando…';
   });
 }
 
@@ -388,10 +388,10 @@ function startDemo() {
 }
 
 const DEMO_ANNOUNCEMENTS = [
-  { type: 'announcement', kind: 'redemption', title: 'Hydrate', username: 'pixelpanda', detail: 'extra water please', important: false },
-  { type: 'announcement', kind: 'bits', title: '100 bits', username: 'mika_zzz', detail: 'take my bits!', important: true },
-  { type: 'announcement', kind: 'sub', title: 'New SUB', username: 'el_tano', detail: 'Prime', important: true },
-  { type: 'announcement', kind: 'sub', title: 'Resub x6', username: 'neko_night', detail: 'Tier 1', important: true },
+  { type: 'announcement', kind: 'redemption', title: 'Hydrate', username: 'pixelpanda', detail: 'agua extra por favor', important: false },
+  { type: 'announcement', kind: 'bits', title: '100 bits', username: 'mika_zzz', detail: '¡toma mis bits!', important: true },
+  { type: 'announcement', kind: 'sub', title: 'Nuevo SUB', username: 'el_tano', detail: 'Prime', important: true },
+  { type: 'announcement', kind: 'sub', title: 'SUB renovado x6', username: 'neko_night', detail: 'Tier 1', important: true },
 ];
 
 function startAnnounceDemo() {
@@ -403,7 +403,7 @@ function startAnnounceDemo() {
 
 if (SETTINGS.demo) {
   document.body.classList.add('demo', 'connected');
-  statusEl.textContent = 'overlay · demo mode';
+  statusEl.textContent = 'overlay · modo demo';
   startDemo();
   startAnnounceDemo();
   window.setTimeout(() => triggerScorpion(DEMO_SCORPION_PHRASE), 4500);

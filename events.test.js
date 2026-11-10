@@ -97,23 +97,28 @@ test('bits announcement is important with the cheer count', () => {
 test('sub announcements are important with plan detail', () => {
   const fresh = subAnnouncement('erin', 'Prime', 'first sub!');
   assert.equal(fresh.kind, 'sub');
-  assert.equal(fresh.title, 'New SUB');
+  assert.equal(fresh.title, 'Nuevo SUB');
   assert.equal(fresh.username, 'erin');
   assert.equal(fresh.detail, 'Prime · first sub!');
   assert.equal(fresh.important, true);
 
   const resub = resubAnnouncement('frank', 5, 'Tier 1', 'half a year');
-  assert.equal(resub.title, 'Resub x5');
+  assert.equal(resub.title, 'SUB renovado x5');
   assert.equal(resub.username, 'frank');
   assert.ok(resub.detail.includes('Tier 1'));
 
   const gift = subGiftAnnouncement('grace', 'heidi', 'Tier 1');
-  assert.equal(gift.title, 'Gift Sub');
+  assert.equal(gift.title, 'SUB regalado');
   assert.equal(gift.username, 'grace');
-  assert.ok(gift.detail.includes('heidi'));
+  assert.ok(gift.detail.includes('para heidi'));
 
   const mystery = mysteryGiftAnnouncement('ivan', 3);
-  assert.equal(mystery.title, '3 Gift Subs');
+  assert.equal(mystery.title, '3 SUBs regalados');
   assert.equal(mystery.username, 'ivan');
   assert.equal(mystery.important, true);
+});
+
+test('generic redemption announcement falls back to Spanish title', () => {
+  const message = genericRedemptionAnnouncement({ userName: 'alice' });
+  assert.equal(message.title, 'Recompensa canjeada');
 });

@@ -74,15 +74,15 @@ transparent.
 The widget port and bind address come from `OVERLAY_PORT` and `OVERLAY_HOST`
 in `.env`.
 
-Add a **Browser** source in OBS:
+Add a **Browser** source in OBS (port comes from `OVERLAY_PORT`: default `3000`, this clone uses `3001`):
 
-- URL: `http://127.0.0.1:3000/`
+- URL: `http://127.0.0.1:<port>/` (e.g. `http://127.0.0.1:3001/`)
 - Width `1920`, Height `1080`
 - Keep "Shutdown source when not visible" unchecked
 
 Test it without the bot or Twitch with the demo URL:
 
-- `http://127.0.0.1:3000/?demo=1`
+- `http://127.0.0.1:3001/?demo=1` (`:3000` with default settings)
 - Add `&debug=1` to show a connection badge in the corner
 
 ### URL parameters
@@ -157,15 +157,17 @@ Bits/cheers and subscriptions arrive over IRC through tmi.js, so they need no
 extra token scopes beyond `chat:read`:
 
 - Cheer → important gold banner with the user and bit count (`100 bits`).
-- New sub, resub (`Resub xN`), gift sub and multi-gift → important purple/gold
-  banner with the user and plan/message detail.
+- New sub (`Nuevo SUB`), resub (`SUB renovado xN`), gift sub (`SUB regalado`)
+  and multi-gift (`N SUBs regalados`) → important purple/gold banner with the
+  user and plan/message detail (Tier 1/2/3, Prime).
 
 Banners stack up to 3, small ones fade after 6 seconds and important ones
 after 10 seconds. They render in a `#announce` layer separate from the
 Scorpio label, so the two never cancel each other.
 
-Test without Twitch: open `http://127.0.0.1:3000/?announce=1` for one sample
-banner, or `?demo=1` to cycle samples every ~15s. In the browser console,
+Test without Twitch (same port as above): open `http://127.0.0.1:3001/?announce=1`
+for one sample banner, `?demo=1` to cycle samples every ~15s, or `?scorpion=1`
+for the Scorpio effect. In the browser console,
 `window.overlay.announce({ type: 'announcement', kind: 'bits', title: '100 bits', username: 'alice', detail: 'gg', important: true })`
 fires a banner on demand.
 
