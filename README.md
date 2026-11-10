@@ -42,6 +42,7 @@ Example: `TWITCH_TOKEN=oauth:abc123def456...`
 | `OVERLAY_HOST` | Bind address for the overlay server (default `127.0.0.1`; use `0.0.0.0` for another PC on the LAN) |
 | `OVERLAY_PORT` | Overlay server port (default `3000`) |
 | `OVERLAY_MAX_CHARS` | Maximum characters per danmaku line (default `140`, clipped with `…`) |
+| `ANNOUNCE_ENABLED` | `true` (default) broadcasts generic announcement banners (other redemptions, bits, subs); `false` disables them while keeping the Scorpio effect |
 | `REDEMPTIONS_ENABLED` | `true` (default) logs channel point redemptions; `false` disables EventSub |
 | `REDEMPTIONS_HIGHLIGHT_REWARD` | Optional reward name to highlight in the redemption log |
 | `JEV_CONTEXT_MESSAGES` | Number of recent messages used as context (default 3) |
@@ -97,6 +98,7 @@ Test it without the bot or Twitch with the demo URL:
 | `chars` | `140` | Maximum characters per line |
 | `names` | on | `names=0` hides usernames |
 | `debug` | off | Show the connection badge (`debug=1`) |
+| `announce` | off | Show one sample announcement banner (`announce=1`); in `demo=1` a sample announcement also cycles every ~15s |
 | `scorpion` | off | Fire the "Scorpio" effect with a sample phrase (`scorpion=1`) |
 | `burn` / `hold` | `10000` / `10000` | Test override in ms: burn-in time before "Scorpio" and time it stays visible |
 | `demoMin` / `demoMax` | `400` / `1700` | Demo delay range in ms |
@@ -144,6 +146,33 @@ with `?scorpion=1`, or wait a few seconds in `?demo=1`; use `burn` and `hold`
 The redemption phrase is classified before the overlay sees it. If it is
 insulting, toxic, spam or contains links — or if Jev cannot classify it — the
 phrase is dropped and only "Scorpio" is shown.
+
+## Generic announcements (other redemptions, bits, subs)
+
+Redemptions of any other reward get a small dark banner at the top-center of
+the overlay with the reward name and the viewer's input (clipped to 120
+characters). It never triggers the Scorpio burn effect.
+
+Bits/cheers and subscriptions arrive over IRC through tmi.js, so they need no
+extra token scopes beyond `chat:read`:
+
+- Cheer → important gold banner with the user and bit count (`100 bits`).
+- New sub, resub (`Resub xN`), gift sub and multi-gift → important purple/gold
+  banner with the user and plan/message detail.
+
+Banners stack up to 3, small ones fade after 6 seconds and important ones
+after 10 seconds. They render in a `#announce` layer separate from the
+Scorpio label, so the two never cancel each other.
+
+Test without Twitch: open `http://127.0.0.1:3000/?announce=1` for one sample
+banner, or `?demo=1` to cycle samples every ~15s. In the browser console,
+`window.overlay.announce({ type: 'announcement', kind: 'bits', title: '100 bits', username: 'alice', detail: 'gg', important: true })`
+fires a banner on demand.
+
+> Follow-up: for richer data (exact bit tiers, sub streaks), migrate these
+> listeners to EventSub, which needs `channel:bits:read` and
+> `channel:read:subscriptions` scopes and a token regen. The current IRC
+> approach works with the existing `chat:read` token on purpose.
 
 ## Notes
 
