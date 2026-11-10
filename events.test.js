@@ -4,6 +4,7 @@ import {
   ANNOUNCE_MAX_DETAIL,
   bitsAnnouncement,
   createAnnouncement,
+  describePlan,
   genericRedemptionAnnouncement,
   mysteryGiftAnnouncement,
   resubAnnouncement,
@@ -66,6 +67,18 @@ test('generic redemption announcement is small and truncates input', () => {
   });
   assert.ok(long.detail.length <= ANNOUNCE_MAX_DETAIL);
   assert.equal(long.important, false);
+});
+
+test('describePlan turns tmi plan values into readable labels', () => {
+  assert.equal(describePlan('Prime'), 'Prime');
+  assert.equal(describePlan('1000'), 'Tier 1');
+  assert.equal(describePlan('2000'), 'Tier 2');
+  assert.equal(describePlan('3000'), 'Tier 3');
+  assert.equal(describePlan({ prime: true }), 'Prime');
+  assert.equal(describePlan({ plan: '2000' }), 'Tier 2');
+  assert.equal(describePlan(''), '');
+  assert.equal(describePlan(null), '');
+  assert.equal(describePlan('bogus-plan'), 'bogus-plan');
 });
 
 test('bits announcement is important with the cheer count', () => {

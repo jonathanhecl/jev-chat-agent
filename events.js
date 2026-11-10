@@ -44,6 +44,25 @@ export function createAnnouncement({ kind, title, username, detail = '', importa
 }
 
 /**
+ * Turn a tmi.js plan value (string id, "Prime", or methods object) into a
+ * readable label for the overlay banner.
+ */
+export function describePlan(plan) {
+  if (plan == null) return '';
+  if (typeof plan === 'object') {
+    if (plan.prime === true || String(plan.plan ?? '').toLowerCase() === 'prime') return 'Prime';
+    return describePlan(plan.plan ?? '');
+  }
+  const raw = String(plan).trim();
+  if (raw === '') return '';
+  if (/^prime$/i.test(raw)) return 'Prime';
+  if (raw === '1000') return 'Tier 1';
+  if (raw === '2000') return 'Tier 2';
+  if (raw === '3000') return 'Tier 3';
+  return raw;
+}
+
+/**
  * Small (non-important) banner for a non-highlight channel point redemption.
  * Never triggers the Scorpio burn.
  */
