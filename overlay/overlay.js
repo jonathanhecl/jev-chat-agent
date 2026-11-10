@@ -1,4 +1,5 @@
 const stage = document.getElementById('stage');
+const announceLayer = document.getElementById('announce');
 const statusEl = document.getElementById('status');
 const params = new URLSearchParams(window.location.search);
 
@@ -245,6 +246,56 @@ function triggerScorpion(phrase = '') {
   }, SETTINGS.burnMs);
 }
 
+const ANNOUNCE_KINDS = new Set(['redemption', 'bits', 'sub']);
+const ANNOUNCE_SMALL_MS = 6000;
+const ANNOUNCE_IMPORTANT_MS = 10000;
+const ANNOUNCE_MAX_STACK = 3;
+
+/**
+ * Queue a generic announcement banner in the top-center layer. Small
+ * (redemption) and important (bits/sub) banners stack up to three and fade
+ * on their own; this path never touches the Scorpio burn effect.
+ * All fields render with textContent, so Twitch content cannot inject markup.
+ */
+function showAnnouncement(payload = {}) {
+  if (!announceLayer) return;
+  if (payload?.type !== 'announcement') return;
+  if (!ANNOUNCE_KINDS.has(payload.kind)) return;
+
+  const important = payload.important === true;
+  const element = document.createElement('div');
+  element.className = `announce ${important ? 'announce-important' : 'announce-small'} announce-kind-${payload.kind}`;
+
+  const title = document.createElement('span');
+  title.className = 'announce-title';
+  title.textContent = String(payload.title ?? '').slice(0, 80);
+  element.append(title);
+
+  const user = document.createElement('span');
+  user.className = 'announce-user';
+  user.textContent = String(payload.username ?? '').slice(0, 40);
+  element.append(user);
+
+  const detail = String(payload.detail ?? '').replace(/\s+/g, ' ').trim().slice(0, 120);
+  if (detail) {
+    const detailElement = document.createElement('span');
+    detailElement.className = 'announce-detail';
+    detailElement.textContent = detail;
+    element.append(detailElement);
+  }
+
+  announceLayer.append(element);
+  while (announceLayer.children.length > ANNOUNCE_MAX_STACK) {
+    announceLayer.firstChild?.remove();
+  }
+
+  window.setTimeout(() => {
+    if (!element.isConnected) return;
+    element.classList.add('announce-leaving');
+    window.setTimeout(() => element.remove(), 450);
+  }, important ? ANNOUNCE_IMPORTANT_MS : ANNOUNCE_SMALL_MS);
+}
+
 function connect() {
   const source = new EventSource('./events');
 
@@ -273,6 +324,16 @@ function connect() {
     }
     if (payload?.type !== 'redemption') return;
     triggerScorpion(payload.phrase);
+  });
+
+  source.addEventListener('announcement', (event) => {
+    let payload;
+    try {
+      payload = JSON.parse(event.data);
+    } catch {
+      return;
+    }
+    showAnnouncement(payload);
   });
 
   source.addEventListener('error', () => {
@@ -326,10 +387,25 @@ function startDemo() {
   setTimeout(next, 250);
 }
 
+const DEMO_ANNOUNCEMENTS = [
+  { type: 'announcement', kind: 'redemption', title: 'Hydrate', username: 'pixelpanda', detail: 'extra water please', important: false },
+  { type: 'announcement', kind: 'bits', title: '100 bits', username: 'mika_zzz', detail: 'take my bits!', important: true },
+  { type: 'announcement', kind: 'sub', title: 'New SUB', username: 'el_tano', detail: 'Prime', important: true },
+  { type: 'announcement', kind: 'sub', title: 'Resub x6', username: 'neko_night', detail: 'Tier 1', important: true },
+];
+
+function startAnnounceDemo() {
+  let index = 0;
+  window.setInterval(() => {
+    showAnnouncement(DEMO_ANNOUNCEMENTS[index++ % DEMO_ANNOUNCEMENTS.length]);
+  }, 15000);
+}
+
 if (SETTINGS.demo) {
   document.body.classList.add('demo', 'connected');
   statusEl.textContent = 'overlay · demo mode';
   startDemo();
+  startAnnounceDemo();
   window.setTimeout(() => triggerScorpion(DEMO_SCORPION_PHRASE), 4500);
   window.setInterval(() => triggerScorpion(DEMO_SCORPION_PHRASE), 22000);
 } else {
@@ -340,7 +416,12 @@ if (flag('scorpion', false)) {
   window.setTimeout(() => triggerScorpion(DEMO_SCORPION_PHRASE), 800);
 }
 
+if (flag('announce', false)) {
+  window.setTimeout(() => showAnnouncement(DEMO_ANNOUNCEMENTS[1]), 800);
+}
+
 window.overlay = {
   push,
+  announce: showAnnouncement,
   settings: SETTINGS,
 };
