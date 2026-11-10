@@ -80,6 +80,9 @@ export const config = {
     port: getInt('OVERLAY_PORT', 3000, 0, 65535),
     maxChars: getInt('OVERLAY_MAX_CHARS', 140, 20, 500),
   },
+  announce: {
+    enabled: getEnv('ANNOUNCE_ENABLED', 'true') === 'true',
+  },
   redemptions: {
     enabled: getEnv('REDEMPTIONS_ENABLED', 'true') === 'true',
     highlightReward: getEnv('REDEMPTIONS_HIGHLIGHT_REWARD', ''),

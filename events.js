@@ -1,0 +1,147 @@
+/**
+ * Builders for generic overlay announcements.
+ *
+ * The overlay server routes SSE events by `event.type`, so every builder here
+ * returns `{ type: 'announcement', ... }` and the widget listens for the
+ * `announcement` event. This channel is separate from the `redemption` event
+ * that drives the Scorpio burn effect, which stays untouched.
+ *
+ * Rendering safety: the widget renders all fields with `textContent`, so no
+ * HTML escaping happens here. Details are truncated to a banner-friendly
+ * length; obvious toxicity filtering is intentionally skipped for these short
+ * notices (only the Scorpio phrase goes through the Jev classifier).
+ */
+
+export const ANNOUNCE_MAX_DETAIL = 120;
+
+const ANNOUNCE_KINDS = new Set(['redemption', 'bits', 'sub']);
+
+/**
+ * Collapse whitespace and clip a detail line so a banner stays readable.
+ */
+export function truncateDetail(text, maxChars = ANNOUNCE_MAX_DETAIL) {
+  const clean = String(text ?? '').replace(/\s+/g, ' ').trim();
+  if (clean.length <= maxChars) return clean;
+  return `${clean.slice(0, Math.max(0, maxChars - 1)).trimEnd()}…`;
+}
+
+/**
+ * Build the SSE payload consumed by the overlay `announcement` layer.
+ */
+export function createAnnouncement({ kind, title, username, detail = '', important = false } = {}) {
+  if (!ANNOUNCE_KINDS.has(kind)) {
+    throw new Error(`Invalid announcement kind: ${kind}`);
+  }
+  return {
+    type: 'announcement',
+    kind,
+    title: String(title ?? ''),
+    username: String(username ?? ''),
+    detail: truncateDetail(detail),
+    important: important === true,
+    ts: Date.now(),
+  };
+}
+
+/**
+ * Turn a tmi.js plan value (string id, "Prime", or methods object) into a
+ * readable label for the overlay banner.
+ */
+export function describePlan(plan) {
+  if (plan == null) return '';
+  if (typeof plan === 'object') {
+    if (plan.prime === true || String(plan.plan ?? '').toLowerCase() === 'prime') return 'Prime';
+    return describePlan(plan.plan ?? '');
+  }
+  const raw = String(plan).trim();
+  if (raw === '') return '';
+  if (/^prime$/i.test(raw)) return 'Prime';
+  if (raw === '1000') return 'Tier 1';
+  if (raw === '2000') return 'Tier 2';
+  if (raw === '3000') return 'Tier 3';
+  return raw;
+}
+
+/**
+ * Small (non-important) banner for a non-highlight channel point redemption.
+ * Never triggers the Scorpio burn.
+ */
+export function genericRedemptionAnnouncement(redemption = {}) {
+  return createAnnouncement({
+    kind: 'redemption',
+    title: redemption.rewardTitle ?? 'Recompensa canjeada',
+    username: redemption.userName ?? 'unknown',
+    detail: redemption.userInput ?? '',
+    important: false,
+  });
+}
+
+/**
+ * Important banner for a bits cheer. `bits` is the cheer count.
+ */
+export function bitsAnnouncement(username, bits, message = '') {
+  const count = Number(bits) || 0;
+  return createAnnouncement({
+    kind: 'bits',
+    title: `${count} ${count === 1 ? 'bit' : 'bits'}`,
+    username,
+    detail: message,
+    important: true,
+  });
+}
+
+/**
+ * Important banner for a new subscription.
+ */
+export function subAnnouncement(username, plan = '', message = '') {
+  const detail = [plan, message].filter(Boolean).join(' · ');
+  return createAnnouncement({
+    kind: 'sub',
+    title: 'Nuevo SUB',
+    username,
+    detail,
+    important: true,
+  });
+}
+
+/**
+ * Important banner for a resubscription.
+ */
+export function resubAnnouncement(username, months, plan = '', message = '') {
+  const detail = [plan, message].filter(Boolean).join(' · ');
+  return createAnnouncement({
+    kind: 'sub',
+    title: `SUB renovado x${Number(months) || 1}`,
+    username,
+    detail,
+    important: true,
+  });
+}
+
+/**
+ * Important banner for a gifted subscription.
+ */
+export function subGiftAnnouncement(gifter, recipient, plan = '') {
+  const detail = [`para ${recipient ?? 'unknown'}`, plan].filter(Boolean).join(' · ');
+  return createAnnouncement({
+    kind: 'sub',
+    title: 'SUB regalado',
+    username: gifter,
+    detail,
+    important: true,
+  });
+}
+
+/**
+ * Important banner for a mystery multi-gift.
+ */
+export function mysteryGiftAnnouncement(username, count) {
+  const total = Number(count) || 0;
+  return createAnnouncement({
+    kind: 'sub',
+    title: `${total} SUBs regalados`,
+    username,
+    detail: '',
+    important: true,
+  });
+}

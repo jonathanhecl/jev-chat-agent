@@ -1,13 +1,17 @@
 import tmi from 'tmi.js';
 import { config } from './config.js';
 import { classifyMessage } from './classifier.js';
-import {
-  createOverlayMessage,
-  formatOverlayUrl,
-  shouldOverlay,
-  startOverlayServer,
-} from './overlayServer.js';
+import { createOverlayMessage, formatOverlayUrl, shouldOverlay, startOverlayServer } from './overlayServer.js';
 import { startRedemptions, summarizeRedemption } from './redemptions.js';
+import {
+  bitsAnnouncement,
+  describePlan,
+  genericRedemptionAnnouncement,
+  mysteryGiftAnnouncement,
+  resubAnnouncement,
+  subAnnouncement,
+  subGiftAnnouncement,
+} from './events.js';
 
 // Simple concurrency-1 queue to avoid overwhelming the Jev endpoint
 let queue = Promise.resolve();
@@ -96,16 +100,23 @@ function logRedemption(redemption) {
 }
 
 /**
- * Log a redemption and, for the highlighted reward, tell the overlay to burn
- * the chat. The viewer's phrase is classified first and dropped when it is
- * insulting, toxic, spam or a link, so unsafe text never reaches the stream.
+ * Log a redemption and tell the overlay about it. The highlighted reward keeps
+ * its exclusive Scorpio burn effect; every other reward gets a small generic
+ * banner and never touches the burn path.
  */
 async function handleRedemption(event) {
   try {
     const redemption = summarizeRedemption(event, config.redemptions.highlightReward);
     logRedemption(redemption);
 
-    if (!redemption.highlighted || !overlay) return;
+    if (!redemption.highlighted) {
+      if (overlay && config.announce.enabled) {
+        overlay.broadcast(genericRedemptionAnnouncement(redemption));
+      }
+      return;
+    }
+
+    if (!overlay) return;
 
     let phrase = redemption.userInput;
 
@@ -146,6 +157,81 @@ async function handleRedemption(event) {
   } catch (err) {
     console.error(`[redemptions] failed to handle event: ${err.message}`);
   }
+}
+
+/**
+ * Bits and subs arrive over IRC (tmi.js), which needs no extra token scopes.
+ * A future EventSub upgrade would need `channel:bits:read` and
+ * `channel:read:subscriptions`; see README for details.
+ */
+function cheerUser(userstate) {
+  return userstate?.username || userstate?.['display-name'] || 'unknown';
+}
+
+function isSkippedCelebration(username) {
+  const name = String(username ?? '').toLowerCase();
+  if (name && name === config.twitch.channel.toLowerCase()) return 'host';
+  if (config.excludedUsers.includes(name)) return 'excluded';
+  return null;
+}
+
+function celebrate(kind, username, logLine, message) {
+  const skip = isSkippedCelebration(username);
+  if (skip) {
+    console.log(`${logLine} ${DIM}(${skip})${RESET}`);
+    return;
+  }
+  console.log(logLine);
+  if (overlay && config.announce.enabled) {
+    overlay.broadcast(message);
+  }
+}
+
+function handleCheer(_channel, userstate, message) {
+  const username = cheerUser(userstate);
+  const bits = Number(userstate?.bits) || 0;
+  celebrate(
+    'cheer',
+    username,
+    `${YELLOW}✨ cheer${RESET} ${BOLD}${username}${RESET} → ${bits} bits${message ? ` · "${message}"` : ''}`,
+    bitsAnnouncement(username, bits, message)
+  );
+}
+
+function handleSubscription(_channel, username, method, message, _userstate) {
+  celebrate(
+    'subscription',
+    username,
+    `${GREEN}⭐ new sub${RESET} ${BOLD}${username}${RESET} → ${describePlan(method)}${message ? ` · "${message}"` : ''}`,
+    subAnnouncement(username, describePlan(method), message)
+  );
+}
+
+function handleResub(_channel, username, months, message, _userstate, methods) {
+  celebrate(
+    'resub',
+    username,
+    `${GREEN}⭐ resub${RESET} ${BOLD}${username}${RESET} → x${months}${message ? ` · "${message}"` : ''}`,
+    resubAnnouncement(username, months, describePlan(methods), message)
+  );
+}
+
+function handleSubGift(_channel, username, _streakMonths, recipient, methods, _userstate) {
+  celebrate(
+    'subgift',
+    username,
+    `${GREEN}🎁 gift sub${RESET} ${BOLD}${username}${RESET} → ${recipient}`,
+    subGiftAnnouncement(username, recipient, describePlan(methods))
+  );
+}
+
+function handleMysteryGift(_channel, username, numbOfSubs, methods, _userstate) {
+  celebrate(
+    'mysterygift',
+    username,
+    `${GREEN}🎁 mystery gift${RESET} ${BOLD}${username}${RESET} → ${numbOfSubs} subs`,
+    mysteryGiftAnnouncement(username, numbOfSubs)
+  );
 }
 
 async function sendChatMessage(client, channel, tags, result) {
@@ -296,6 +382,26 @@ client.on('connected', (addr, port) => {
 
 client.on('message', (channel, tags, message, self) => {
   handleMessage(channel, tags, message, self, client);
+});
+
+client.on('cheer', (channel, userstate, message) => {
+  handleCheer(channel, userstate, message);
+});
+
+client.on('subscription', (channel, username, method, message, userstate) => {
+  handleSubscription(channel, username, method, message, userstate);
+});
+
+client.on('resub', (channel, username, months, message, userstate, methods) => {
+  handleResub(channel, username, months, message, userstate, methods);
+});
+
+client.on('subgift', (channel, username, streakMonths, recipient, methods, userstate) => {
+  handleSubGift(channel, username, streakMonths, recipient, methods, userstate);
+});
+
+client.on('submysterygift', (channel, username, numbOfSubs, methods, userstate) => {
+  handleMysteryGift(channel, username, numbOfSubs, methods, userstate);
 });
 
 client.on('error', (err) => {

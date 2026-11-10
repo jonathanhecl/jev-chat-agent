@@ -234,6 +234,89 @@ body {
   margin-left: 0.22em;
 }
 
+/* Generic announcements: small banners stacked top-center, visually distinct
+   from the fiery Scorpio label (dark pill vs gold/purple important). */
+#announce {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  max-width: 92vw;
+  pointer-events: none;
+  font-family: 'Noto Sans', 'Segoe UI', system-ui, sans-serif;
+}
+
+.announce {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  max-width: 92vw;
+  padding: 0.35em 0.9em;
+  border-radius: 999px;
+  background: rgba(12, 14, 22, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #eef2ff;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: announce-in 0.3s ease-out;
+}
+
+.announce .announce-title {
+  font-weight: 800;
+}
+
+.announce .announce-user {
+  color: #9be7ff;
+}
+
+.announce .announce-detail {
+  color: rgba(238, 242, 255, 0.75);
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.announce-important {
+  font-size: 30px;
+  padding: 0.45em 1.1em;
+  border: 2px solid #f5c542;
+  box-shadow:
+    0 0 0.4em rgba(245, 197, 66, 0.55),
+    0 0 1.1em rgba(150, 90, 255, 0.45);
+}
+
+.announce-kind-bits .announce-title {
+  color: #ffd166;
+}
+
+.announce-kind-sub .announce-title {
+  color: #c4b5fd;
+}
+
+.announce-leaving {
+  opacity: 0;
+  transition: opacity 0.4s ease-in;
+}
+
+@keyframes announce-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 #status {
   display: none;
   position: fixed;

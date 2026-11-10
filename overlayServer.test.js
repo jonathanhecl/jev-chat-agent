@@ -140,3 +140,43 @@ test('broadcast streams messages to SSE clients', async (t) => {
   assert.match(received, /event: message/);
   assert.match(received, /data: \{"type":"message","username":"alice","text":"hola mundo","ts":1\}/);
 });
+
+test('broadcast routes announcements as SSE announcement events', async (t) => {
+  const { overlay, base } = await startServer(t);
+  const controller = new AbortController();
+  t.after(() => controller.abort());
+
+  const response = await fetch(`${base}/events`, { signal: controller.signal });
+  assert.equal(response.status, 200);
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  async function readUntil(predicate) {
+    const deadline = Date.now() + 3000;
+    while (Date.now() < deadline) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      if (predicate(buffer)) return buffer;
+    }
+    throw new Error(`stream timeout, received: ${JSON.stringify(buffer)}`);
+  }
+
+  await readUntil((text) => text.includes(': connected'));
+
+  overlay.broadcast({
+    type: 'announcement',
+    kind: 'bits',
+    title: '100 bits',
+    username: 'carol',
+    detail: 'take my bits!',
+    important: true,
+    ts: 2,
+  });
+
+  const received = await readUntil((text) => text.includes('100 bits'));
+  assert.match(received, /event: announcement/);
+  assert.match(received, /"kind":"bits"/);
+});
